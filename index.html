@@ -10,18 +10,26 @@
             function initialize () {
                 var mapOptions = {
                     center : new google.maps.LatLng(40.7566, -73.9863),
-                    zoom : 19,
+                    zoom : 17,
                     mapTypeId : google.maps.MapTypeId.SATELLITE,
                 };
 
                 map = new google.maps.Map($('#map').get(0), mapOptions);
                 map.setTilt (0);
 
-                $.getJSON ('/test/test', load_geojson)
+                $.getJSON ('/airportloop/kalman_time_varying', function (data) { load_geojson(data, 'red'); })
                     .fail(geojson_failure);
+
+                $.getJSON ('/airportloop/absolute', function (data) { load_geojson(data, 'blue'); })
+                    .fail(geojson_failure);
+
+                $.getJSON ('/airportloop/integrate', function (data) { load_geojson(data, 'green'); })
+                    .fail(geojson_failure);
+
+
             }
 
-            function load_geojson (data) {
+            function load_geojson (data, color) {
                 console.log('success')
 
                 map.setCenter(new google.maps.LatLng(
@@ -30,7 +38,7 @@
                 ));
 
                 var googleOptions = {
-                    strokeColor: '#F00',
+                    strokeColor: color,
                     strokeOpacity: 0.8,
                     strokeWeight: 2,
                 };

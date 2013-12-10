@@ -1,8 +1,8 @@
 function R = measurement_covariance (measurements)
     constant;
     
-    sigma_pr = 30;
-    sigma_D = 10;
+    sigma_pr = 20;
+    sigma_D = 0.01;
 
     R = zeros(8, 8);
     R(1:3, 1:3) = sigma_pr^2*measurements.Q(1:3, 1:3);
