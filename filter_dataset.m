@@ -33,7 +33,7 @@ function x_hat = filter_dataset(dataset_name, mode, gain_mode, process_gain)
     x_hat = cell(num_samples, 1);
 
     x_hat{1} = [];
-    x_hat{1}.time = posOBS(1);
+    x_hat{1}.time = posOBS(1) - posOBS(5);
     x_hat{1}.position = posOBS(2:4)';
     x_hat{1}.velocity = posOBS(6:8)';
     x_hat{1}.acceleration = zeros(3, 1);
@@ -70,7 +70,7 @@ function x_hat = filter_dataset(dataset_name, mode, gain_mode, process_gain)
         end
 
         measurements = [];
-        measurements.time = posOBS(1);
+        measurements.time = posOBS(1) - posOBS(5);
         measurements.position = posOBS(2:4)';
         measurements.velocity = posOBS(6:8)';
         measurements.clock_offset = c*posOBS(5);
@@ -83,6 +83,7 @@ function x_hat = filter_dataset(dataset_name, mode, gain_mode, process_gain)
         dt = measurements.time - t_Rk;
                 
         deltaTRk = dt/(1 + x_hat{k}.clock_rate_offset/c);
+       
 
         if strcmp(mode, 'feedback')
             x_hat{k+1} = feedback(deltaTRk, x_hat{k}, measurements, gain_mode, process_gain);
