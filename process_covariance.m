@@ -1,3 +1,3 @@
-function R = process_covariance ()
-    R = 10 * eye(4);
+function R = process_covariance (process_gain)
+    R = process_gain * eye(4);
 end

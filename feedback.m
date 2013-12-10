@@ -1,7 +1,7 @@
-function next_state = feedback (deltaTRk, state, measurements, gain_mode)
+function next_state = feedback (deltaTRk, state, measurements, gain_mode, process_gain)
     R = measurement_covariance (measurements);
     
-    Q = process_covariance ();
+    Q = process_covariance (process_gain);
     
     A = process_matrix (deltaTRk);
     

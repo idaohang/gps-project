@@ -1,4 +1,4 @@
-function x_hat = filter_dataset(dataset_name, mode, gain_mode)
+function x_hat = filter_dataset(dataset_name, mode, gain_mode, process_gain)
     constant;
 
     dataset = load_dataset(dataset_name);
@@ -15,10 +15,18 @@ function x_hat = filter_dataset(dataset_name, mode, gain_mode)
     iflagna = true;
     iflagion = true;
     elevmask = 5;
-    [posOBS,~,~,~,~] = ...
+    [posOBS,~,~,~,sigmaPR,sigmaDopp] = ...
                    solveposvelod(ephem1,pseudoR,Doppshift,guess,gpsTime,...
                               dataset.ion_params,iflagion,elevmask,dataset.weather.p,...
                               dataset.weather.TdegK,dataset.weather.hrel,iflagna);
+                          
+    if isnan(sigmaPR)
+        sigmaPR = 2;
+    end
+    
+    if isnan(sigmaDopp)
+        sigmaDopp = 0.15;
+    end
                           
     num_samples = size(dataset.pseudorange,1);
     
@@ -48,10 +56,18 @@ function x_hat = filter_dataset(dataset_name, mode, gain_mode)
     
         pseudoR = pseudo(3:2:end)';
 
-        [posOBS,~,~,~,~,~,Q,Qv] = ...
+        [posOBS,~,~,~,sigmaPRk,sigmaDoppk,Q,Qv] = ...
                solveposvelod_DOP(ephem_kp1,pseudoR,Doppshift, x_hat{k}.position',t_Rkp1,...
                           dataset.ion_params,iflagion,elevmask,dataset.weather.p,...
                           dataset.weather.TdegK,dataset.weather.hrel,iflagna);
+                      
+        if ~isnan(sigmaPRk)
+            sigmaPR = sigmaPRk;
+        end
+        
+        if ~isnan(sigmaDoppk)
+            sigmaDopp = sigmaDoppk;
+        end
 
         measurements = [];
         measurements.time = posOBS(1);
@@ -59,6 +75,8 @@ function x_hat = filter_dataset(dataset_name, mode, gain_mode)
         measurements.velocity = posOBS(6:8)';
         measurements.clock_offset = c*posOBS(5);
         measurements.clock_rate_offset = c*posOBS(9);
+        measurements.sigmaPR = sigmaPR;
+        measurements.sigmaDopp = sigmaDopp;
         measurements.Q = Q;
         measurements.Qv = Qv;
 
@@ -67,7 +85,7 @@ function x_hat = filter_dataset(dataset_name, mode, gain_mode)
         deltaTRk = dt/(1 + x_hat{k}.clock_rate_offset/c);
 
         if strcmp(mode, 'feedback')
-            x_hat{k+1} = feedback(deltaTRk, x_hat{k}, measurements, gain_mode);
+            x_hat{k+1} = feedback(deltaTRk, x_hat{k}, measurements, gain_mode, process_gain);
         elseif strcmp(mode, 'absolute')
             x_hat{k+1} = measurements;
         elseif strcmp(mode, 'integrate')

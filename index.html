@@ -10,20 +10,20 @@
             function initialize () {
                 var mapOptions = {
                     center : new google.maps.LatLng(40.7566, -73.9863),
-                    zoom : 17,
+                    zoom : 13,
                     mapTypeId : google.maps.MapTypeId.SATELLITE,
                 };
 
                 map = new google.maps.Map($('#map').get(0), mapOptions);
                 map.setTilt (0);
 
-                $.getJSON ('/airportloop/kalman_time_varying', function (data) { load_geojson(data, 'red'); })
+                $.getJSON ('/cudtrt13triphammercu/kalman_time_varying', function (data) { load_geojson(data, 'red'); })
                     .fail(geojson_failure);
 
-                $.getJSON ('/airportloop/absolute', function (data) { load_geojson(data, 'blue'); })
+                $.getJSON ('/cudtrt13triphammercu/absolute', function (data) { load_geojson(data, 'blue'); })
                     .fail(geojson_failure);
 
-                $.getJSON ('/airportloop/integrate', function (data) { load_geojson(data, 'green'); })
+                $.getJSON ('/cudtrt13triphammercu/integrate', function (data) { load_geojson(data, 'green'); })
                     .fail(geojson_failure);
 
 

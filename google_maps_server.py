@@ -40,5 +40,5 @@ __application__ = tornado.web.Application([
 if __name__ == '__main__':
     tornado.options.parse_command_line()
 
-    __application__.listen(8888)
+    __application__.listen(8889)
     tornado.ioloop.IOLoop.instance().start()
