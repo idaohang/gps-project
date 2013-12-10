@@ -1,4 +1,4 @@
-function save_as_geojson (filename, x_hat, name)
+function save_as_geojson (filename, x_hat, name, save_covariance)
     f = fopen(filename, 'wb');
 
     fprintf(f, '{\n');
@@ -19,7 +19,7 @@ function save_as_geojson (filename, x_hat, name)
 
     fprintf(f, ']');
     
-    if isfield(x_hat{2}, 'covariance')
+    if save_covariance
         num_covariances = min([length(x_hat), 1000]);
         sample_spacing = length(x_hat) / num_covariances;
         m = chi2inv(0.99, 3);
