@@ -1,4 +1,4 @@
-function x_hat = filter_dataset(dataset_name, method, gain_mode)
+function x_hat = filter_dataset(dataset_name, mode, gain_mode)
     constant;
 
     dataset = load_dataset(dataset_name);
@@ -32,6 +32,7 @@ function x_hat = filter_dataset(dataset_name, method, gain_mode)
     x_hat{1}.clock_offset = c*posOBS(5);
     x_hat{1}.clock_rate_offset = c*posOBS(9);
     x_hat{1}.covariance = eye(11);
+    x_hat{1}.Phi = zeros(11);
     
     for k=1:num_samples-1
         t_Rk = x_hat{k}.time;
@@ -39,9 +40,6 @@ function x_hat = filter_dataset(dataset_name, method, gain_mode)
         
         pseudorange_kp1 = dataset.pseudorange(k+1, :);
         doppler_shift_kp1 = dataset.doppler_shift(k+1, :);
-        
-        assert (pseudorange_kp1(1) == k+1);
-        assert (doppler_shift_kp1(1) == k+1);
         
         SV = visible_satellite_filter(pseudorange_kp1);
 
@@ -68,7 +66,14 @@ function x_hat = filter_dataset(dataset_name, method, gain_mode)
                 
         deltaTRk = dt/(1 + x_hat{k}.clock_rate_offset/c);
 
-        x_hat{k+1} = feedback_correction(deltaTRk, x_hat{k}, measurements, method, gain_mode);
+        if strcmp(mode, 'feedback')
+            x_hat{k+1} = feedback(deltaTRk, x_hat{k}, measurements, gain_mode);
+        elseif strcmp(mode, 'absolute')
+            x_hat{k+1} = measurements;
+        elseif strcmp(mode, 'integrate')
+            x_hat{k+1} = measurements;
+            x_hat{k+1}.position = x_hat{k}.position + measurements.velocity;
+        end
     end
     
 

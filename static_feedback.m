@@ -1,65 +1,72 @@
 function next_state = static_feedback(deltaTRk, state, measurements, ...
                                       gain_mode)
-    prediction = [];
-    prediction.position = state.position + ...
+    prediction = [
+        state.position + ...
         deltaTRk * state.velocity + ...
         0.5 * deltaTRk^2 * state.acceleration;
-    prediction.velocity = state.velocity + ...
+        
+        state.velocity + ...
         deltaTRk * state.acceleration;
-    prediction.acceleration = state.acceleration;
-    prediction.clock_offset = state.clock_offset + ...
+        
+        state.acceleration;
+        
+        state.clock_offset + ...
         deltaTRk * state.clock_rate_offset;
-    prediction.clock_rate_offset = state.clock_rate_offset;
+        
+        state.clock_rate_offset;
+    ];
 
-    innovation = [];
-    innovation.position = measurements.position - prediction.position;
-    innovation.velocity = measurements.velocity - prediction.velocity;
-    innovation.clock_offset = measurements.clock_offset - ...
-        prediction.clock_offset;
-    innovation.clock_rate_offset = measurements.clock_rate_offset - ...
-        prediction.clock_rate_offset;
+    z = [
+        measurements.position;
+        measurements.velocity;
+        measurements.clock_offset;
+        measurements.clock_rate_offset;
+    ];
 
-    next_state = [];
-    
+    innovation = z - prediction([1:6 10:11]);
+
     if strcmp(gain_mode, 'slow')
-        next_state.position = prediction.position + ...
-            8.44567e-3 * innovation.position + ...
-            0.508214 * deltaTRk * innovation.velocity;
-        next_state.velocity = prediction.velocity + ...
-            3.67184e-5/deltaTRk * innovation.position + ...
-            0.975104 * innovation.velocity;
-        next_state.acceleration = prediction.acceleration + ...
-            -3.29082e-5/deltaTRk^2 * innovation.position + ...
-            0.927802/deltaTRk * innovation.velocity;
-        next_state.clock_offset = prediction.clock_offset + ...
-            8.462e-3 * innovation.clock_offset + ...
-            0.0271035 * deltaTRk * innovation.clock_rate_offset;
-        next_state.clock_rate_offset = prediction.clock_rate_offset + ...
-            1.95823e-6/deltaTRk * innovation.clock_offset + ...
-            0.972659 * innovation.clock_rate_offset;
+        gain = zeros(11, 8);
+        gain(1:3,1:3) = 8.44567e-3 * eye(3);
+        gain(1:3,4:6) = 0.508214 * deltaTRk * eye(3);
+        
+        gain(4:6,1:3) = 3.67184e-5/deltaTRk * eye(3);
+        gain(4:6,4:6) = 0.975104 * eye(3);
+        
+        gain(7:9,1:3) = -3.29082e-5/deltaTRk^2 * eye(3);
+        gain(7:9,4:6) = 0.927802/deltaTRk * eye(3);
+        
+        gain(10, 7) = 8.462e-3;
+        gain(10, 8) = 0.0271035 * deltaTRk;
+        
+        gain(11, 7) = 1.95823e-6/deltaTRk;
+        gain(11, 8) = 0.972659;
     elseif strcmp(gain_mode, 'fast')
-        next_state.position = prediction.position + ...
-            8.44612e-3 * innovation.position + ...
-            0.495778 * deltaTRk * innovation.velocity;
-        next_state.velocity = prediction.velocity + ...
-            3.582e-5/deltaTRk * innovation.position + ...
-            0.999979 * innovation.velocity;
-        next_state.acceleration = prediction.acceleration + ...
-            -3.55164e-5/deltaTRk^2 * innovation.position + ...
-            1.000009/deltaTRk * innovation.velocity;
-        next_state.clock_offset = prediction.clock_offset + ...
-            8.46395e-3 * innovation.clock_offset + ...
-            2.86552e-6 * deltaTRk * innovation.clock_rate_offset;
-        next_state.clock_rate_offset = prediction.clock_rate_offset + ...
-            2.07034e-10/deltaTRk * innovation.clock_offset + ...
-            0.999997 * innovation.clock_rate_offset;
+        gain = zeros(11, 8);
+        gain(1:3,1:3) = 8.44612e-3 * eye(3);
+        gain(1:3,4:6) = 0.495778 * deltaTRk * eye(3);
+        
+        gain(4:6,1:3) = 3.582e-5/deltaTRk * eye(3);
+        gain(4:6,4:6) = 0.999979 * eye(3);
+        
+        gain(7:9,1:3) = -3.55164e-5/deltaTRk^2 * eye(3);
+        gain(7:9,4:6) = 1.000009/deltaTRk * eye(3);
+        
+        gain(10, 7) = 8.46395e-3;
+        gain(10, 8) = 2.86552e-6 * deltaTRk;
+        
+        gain(11, 7) = 2.07034e-10/deltaTRk;
+        gain(11, 8) = 0.999997;
     end
     
-    next_state.innovation = [ 
-        innovation.position; 
-        innovation.velocity; 
-        innovation.clock_offset; 
-        innovation.clock_rate_offset
-    ];
+    x = prediction + gain * innovation;
+
+    next_state = [];
+    next_state.innovation = innovation;
     next_state.time = measurements.time;
+    next_state.position = x(1:3);
+    next_state.velocity = x(4:6);
+    next_state.acceleration = x(7:9);
+    next_state.clock_offset = x(10);
+    next_state.clock_rate_offset = x(11);
 end
