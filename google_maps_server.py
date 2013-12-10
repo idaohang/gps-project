@@ -30,7 +30,7 @@ class ReceiverPathHandler(tornado.web.RequestHandler):
 
 __application__ = tornado.web.Application([
         (r'/', MainHandler),
-        (r'/([a-zA-Z0-9_]+)/([a-zA-Z0-9_]+)', ReceiverPathHandler),
+        (r'/([a-zA-Z0-9_\-\.]+)/([a-zA-Z0-9_\-\.]+)', ReceiverPathHandler),
         (r'/(.*\.js)', tornado.web.StaticFileHandler, {'path':os.path.join(os.path.dirname(__file__), 'static')}),
     ], 
     static_path=os.path.dirname(__file__),

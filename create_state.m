@@ -1,4 +1,4 @@
-function state = create_state (x, time, innovation, covariance, Phi)
+function state = create_state (x, time, innovation, covariance, Phi, discontinuity)
     state = [];
     state.time = time;
     state.position = x(1:3);
@@ -9,4 +9,5 @@ function state = create_state (x, time, innovation, covariance, Phi)
     state.innovation = innovation;
     state.covariance = covariance;
     state.Phi = Phi;
+    state.discontinuity = discontinuity;
 end

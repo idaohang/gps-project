@@ -41,6 +41,7 @@ function x_hat = filter_dataset(dataset_name, mode, gain_mode, process_gain)
     x_hat{1}.clock_rate_offset = c*posOBS(9);
     x_hat{1}.covariance = eye(11);
     x_hat{1}.Phi = zeros(11);
+    x_hat{1}.innovation = zeros(8, 1);
     
     for k=1:num_samples-1
         t_Rk = x_hat{k}.time;

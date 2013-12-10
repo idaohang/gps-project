@@ -22,9 +22,10 @@ function next_state = feedback (deltaTRk, state, measurements, gain_mode, proces
     
     prediction = A * x;
     innovation = z - C * prediction;
-    x = prediction + gain * innovation;
+    discontinuity = gain * innovation;
+    x = prediction + discontinuity;
     
     Phi = (eye(11) - gain * C) * A;
     
-    next_state = create_state (x, measurements.time, innovation, covariance, Phi);
+    next_state = create_state (x, measurements.time, innovation, covariance, Phi, discontinuity);
 end

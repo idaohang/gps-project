@@ -17,14 +17,27 @@
                 map = new google.maps.Map($('#map').get(0), mapOptions);
                 map.setTilt (0);
 
-                $.getJSON ('/cudtrt13triphammercu/kalman_time_varying', function (data) { load_geojson(data, 'red'); })
+                var dataset = 'cudtrt13triphammercu';
+                //var dataset = 'airportloop';
+
+                /* 
+                $.getJSON ('/'+dataset+'/kalman_time_varying_0.1', function (data) { load_geojson(data, 'red'); })
                     .fail(geojson_failure);
 
-                $.getJSON ('/cudtrt13triphammercu/absolute', function (data) { load_geojson(data, 'blue'); })
+                $.getJSON ('/'+dataset+'/kalman_time_varying_1', function (data) { load_geojson(data, 'green'); })
+                    .fail(geojson_failure);
+                */
+
+                $.getJSON ('/'+dataset+'/kalman_time_varying_10', function (data) { load_geojson(data, 'blue'); })
                     .fail(geojson_failure);
 
-                $.getJSON ('/cudtrt13triphammercu/integrate', function (data) { load_geojson(data, 'green'); })
+                $.getJSON ('/'+dataset+'/absolute', function (data) { load_geojson(data, 'yellow'); })
                     .fail(geojson_failure);
+
+                /*
+                $.getJSON ('/'+dataset+'/integrate', function (data) { load_geojson(data, 'magenta'); })
+                    .fail(geojson_failure);
+                */
 
 
             }
@@ -33,8 +46,8 @@
                 console.log('success')
 
                 map.setCenter(new google.maps.LatLng(
-                    data.geometry.coordinates[0][1], 
-                    data.geometry.coordinates[0][0]
+                    data.geometry.coordinates[0][0][1], 
+                    data.geometry.coordinates[0][0][0]
                 ));
 
                 var googleOptions = {
@@ -45,7 +58,9 @@
 
                 var googleMapsVector = new GeoJSON(data, googleOptions);
 
-                googleMapsVector.setMap(map);
+                $.each(googleMapsVector, function (k, v) {
+                    v.setMap(map);
+                });
             }
 
             function geojson_failure (data) {
