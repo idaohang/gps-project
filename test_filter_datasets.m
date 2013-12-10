@@ -1,5 +1,6 @@
 function test_filter_datasets()
     datasets = {
+        'airportloop',
         'cudtrt13triphammercu',
         'dtrt13triphammer',
         'ncayugast',
