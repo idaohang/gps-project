@@ -6,10 +6,15 @@ import tornado.options
 import tornado.gen
 import tornado.web
 import tornado.ioloop
+import tornado.template
 
 class MainHandler(tornado.web.RequestHandler):
-    def get(self):
-        self.render('index.html')
+    def __init__ (self, *request, **kwargs):
+        super(MainHandler, self).__init__ (*request, **kwargs)
+        self.template = loader.load('index.html');
+
+    def get(self, dataset):
+        self.write(self.template.generate(dataset=dataset))
 
 def _get_receiver_path (dataset, gain_mode, callback=None):
     with open('receiver_paths/%s-%s.json'%(dataset, gain_mode), 'r') as path_file:
@@ -28,14 +33,16 @@ class ReceiverPathHandler(tornado.web.RequestHandler):
 
         self.finish()
 
+__static_path__ = os.path.join(os.path.dirname(__file__), 'static')
+
 __application__ = tornado.web.Application([
-        (r'/', MainHandler),
+        (r'/(.*\.js)', tornado.web.StaticFileHandler, {'path':__static_path__}),
+        (r'/([a-zA-Z0-9_\-\.]+)', MainHandler),
         (r'/([a-zA-Z0-9_\-\.]+)/([a-zA-Z0-9_\-\.]+)', ReceiverPathHandler),
-        (r'/(.*\.js)', tornado.web.StaticFileHandler, {'path':os.path.join(os.path.dirname(__file__), 'static')}),
     ], 
-    static_path=os.path.dirname(__file__),
     debug=True
 )
+loader = tornado.template.Loader(__static_path__)
 
 if __name__ == '__main__':
     tornado.options.parse_command_line()

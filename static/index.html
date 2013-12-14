@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css">
+        <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap-theme.min.css">
+    </head>
+    <body>
+        <nav class="navbar navbar-default" role="navigation">
+            <div class="collapse navbar-collapse">
+                <ul class="nav navbar-nav">
+                    <li><a href="/airportloop">airportloop</a></li>
+                    <li><a href="/cudtrt13triphammercu">cudtrt13triphammercu</a></li>
+                    <li><a href="/dtrt13triphammer">dtrt13triphammer</a></li>
+                    <li><a href="/ncayugast">ncayugast</a></li>
+                    <li><a href="/rt13warrenrd">rt13warrenrd</a></li>
+                </ul>
+            </div>
+        </nav>
+        <div class="container">
+            <div class="row">
+                <div id="map" class="col-lg-8 col-md-8 col-sm-8 col-xs-8" style="height:600px">
+                </div>
+                <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4">
+                    <h2>{{ dataset }}</h2>
+                    <h3>Pose Estimates</h3>
+                    <div class="checkbox"><label id="absolute"><input checked="true" type="checkbox" > Absolute Position</label></div>
+                    <div class="checkbox"><label id="integrate"><input checked="true" type="checkbox" > Integrated Velocity</label></div>
+                    <div class="checkbox"><label id="static_slow"><input checked="true" type="checkbox" > Static - slow gain</label></div>
+                    <div class="checkbox"><label id="static_fast"><input checked="true" type="checkbox" > Static - fast gain</label></div>
+                    <div class="checkbox"><label id="kalman_steady_state_0_1"><input checked="true" type="checkbox" > Kalman - steady state, Q=0.1I</label></div>
+                    <div class="checkbox"><label id="kalman_steady_state_1"><input checked="true" type="checkbox" > Kalman - steady state, Q=I</label></div>
+                    <div class="checkbox"><label id="kalman_steady_state_10"><input checked="true" type="checkbox" > Kalman - steady state, Q=10I</label></div>
+                    <div class="checkbox"><label id="kalman_time_varying_0_1"><input checked="true" type="checkbox" > Kalman - time varying, Q=0.1I</label></div>
+                    <div class="checkbox"><label id="kalman_time_varying_1"><input checked="true" type="checkbox" > Kalman - time varying, Q=I</label></div>
+                    <div class="checkbox"><label id="kalman_time_varying_10"><input checked="true" type="checkbox" > Kalman - time varying, Q=10I</label></div>
+                </div>
+            </div>
+        </div>
+
+        <script src="http://code.jquery.com/jquery-2.0.3.min.js" type="text/javascript"></script>
+        <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
+
+        <script src="http://maps.googleapis.com/maps/api/js?key=AIzaSyAhydT0Kt-vmdCL2805ijP2M2A0m7G16zk&sensor=false" type="text/javascript"></script>
+        <script src="GeoJSON.js" type="text/javascript"></script>
+
+        <script type="text/javascript">
+            var map = null;
+
+            function initialize () {
+                var mapOptions = {
+                    center : new google.maps.LatLng(40.7566, -73.9863),
+                    zoom : 17,
+                    mapTypeId : google.maps.MapTypeId.SATELLITE,
+                };
+
+                map = new google.maps.Map($('#map').get(0), mapOptions);
+                map.setTilt (0);
+
+                var dataset = '{{ dataset }}';
+
+                var colors = ['#1f77b4', '#8c564b', '#ff7f0e', '#e377c2', '#2ca02c', '#7f7f7f', '#d62728', '#bcbd22', '#9467bd', '#17becf'];
+
+                var types = ['absolute', 'integrate', 'static_slow', 'static_fast', 'kalman_steady_state_0_1', 'kalman_steady_state_1', 'kalman_steady_state_10', 'kalman_time_varying_0_1', 'kalman_time_varying_1', 'kalman_time_varying_10'];
+
+                $.each(colors, function (k, v) {
+                    $.getJSON ('/'+dataset+'/'+types[k], function (data) { 
+                        load_geojson (data, v, types[k]); 
+                    });
+                });
+            }
+
+            function load_geojson (data, color, name) {
+                map.setCenter(new google.maps.LatLng(
+                    data.geometry.coordinates[0][0][1], 
+                    data.geometry.coordinates[0][0][0]
+                ));
+                var googleOptions = {
+                    strokeColor: color,
+                    strokeOpacity: 0.8,
+                    strokeWeight: 2,
+                };
+
+                var googleMapsVector = new GeoJSON(data, googleOptions);
+
+                $.each(googleMapsVector, function (k, v) {
+                    v.setMap(map);
+                });
+
+                var control = $('#'+name);
+                control.css('color', color);
+                var checkbox = control.find('input');
+                checkbox.change(function (event) {
+                    $.each (googleMapsVector, function (k, v) {
+                        v.setVisible(checkbox.is(":checked"));
+                    });
+                });
+            }
+
+            function geojson_failure (data) {
+                console.log(data);
+            }
+
+            $(document).ready(initialize);
+        </script>
+
+    </body>
+</html>

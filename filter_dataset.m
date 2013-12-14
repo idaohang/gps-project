@@ -84,7 +84,6 @@ function x_hat = filter_dataset(dataset_name, mode, gain_mode, process_gain)
         dt = measurements.time - t_Rk;
                 
         deltaTRk = dt/(1 + x_hat{k}.clock_rate_offset/c);
-       
 
         if strcmp(mode, 'feedback')
             x_hat{k+1} = feedback(deltaTRk, x_hat{k}, measurements, gain_mode, process_gain);
