@@ -9,6 +9,7 @@ function draw_trajectory(xhat)
        [cos(phiavg),0,sin(phiavg);0,1,0;-sin(phiavg),0,cos(phiavg)]*...
        [cos(lambdaavg),sin(lambdaavg),0;...
           -sin(lambdaavg),cos(lambdaavg),0;0,0,1];
+    positions = bsxfun(@minus, positions, mean_ecef);
     local_position = A_VEN_ECEF*positions;
     velocity_mag = sqrt(sum(velocities.^2));
     scatter(local_position(2,3:end), local_position(3,3:end), 10, velocity_mag(3:end));

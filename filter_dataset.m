@@ -1,11 +1,11 @@
-function x_hat = filter_dataset(dataset_name, mode, gain_mode, process_gain)
+function x_hat = filter_dataset(dataset_name, elevmask, bias, mode, gain_mode, process_gain, measurement_gain)
     constant;
 
     dataset = load_dataset(dataset_name);
     
     SV = visible_satellite_filter(dataset.pseudorange(1,:));
     
-    [ephem1 pseudo] = formatdata(dataset.ephem,dataset.pseudorange(1,:),SV');
+    [ephem1, pseudo] = formatdata(dataset.ephem,dataset.pseudorange(1,:),SV');
     Doppshift = format_doppler_shift(ephem1, dataset.doppler_shift(1,:));
         
     pseudoR = pseudo(3:2:end)';
@@ -14,24 +14,41 @@ function x_hat = filter_dataset(dataset_name, mode, gain_mode, process_gain)
     
     iflagna = true;
     iflagion = true;
-    elevmask = 5;
     [posOBS,~,~,~,sigmaPR,sigmaDopp] = ...
                    solveposvelod(ephem1,pseudoR,Doppshift,guess,gpsTime,...
                               dataset.ion_params,iflagion,elevmask,dataset.weather.p,...
                               dataset.weather.TdegK,dataset.weather.hrel,iflagna);
                           
+    num_samples = size(dataset.pseudorange,1);
+    
+    pseudorange_bias_history = zeros(32, num_samples);
+    doppler_shift_bias_history = zeros(32, num_samples);
+    sigma_pr_history = zeros(1, num_samples);
+    sigma_dopp_history = zeros(1, num_samples);
+    t_history = zeros(1, num_samples);
+    
     if isnan(sigmaPR)
-        sigmaPR = 2;
+        sigma_pr_history(1) = 2;
+    else
+        sigma_pr_history(1) = sigmaPR;
     end
     
     if isnan(sigmaDopp)
-        sigmaDopp = 0.15;
+        sigma_dopp_history(1) = 0.15;
+    else
+        sigma_dopp_history(1) = sigmaDopp;
     end
                           
-    num_samples = size(dataset.pseudorange,1);
-    
     x_hat = cell(num_samples, 1);
 
+    if bias
+        num_states = 75;
+        num_measurements = 72;
+    else
+        num_states = 11;
+        num_measurements = 8;
+    end
+    
     x_hat{1} = [];
     x_hat{1}.time = posOBS(1) - posOBS(5);
     x_hat{1}.position = posOBS(2:4)';
@@ -39,10 +56,20 @@ function x_hat = filter_dataset(dataset_name, mode, gain_mode, process_gain)
     x_hat{1}.acceleration = zeros(3, 1);
     x_hat{1}.clock_offset = c*posOBS(5);
     x_hat{1}.clock_rate_offset = c*posOBS(9);
-    x_hat{1}.covariance = eye(11);
-    x_hat{1}.Phi = zeros(11);
+    x_hat{1}.covariance = 1e6*eye(num_states);
+    x_hat{1}.Phi = zeros(num_states);
     x_hat{1}.innovation = zeros(8, 1);
+    x_hat{1}.process_gain = process_gain;
+    x_hat{1}.gain = zeros(11,8);
+    x_hat{1}.gain(1:6,1:6) = eye(6);
+    x_hat{1}.gain(10:11,7:8) = eye(2);
+    x_hat{1}.t = 0;
+    if bias
+        x_hat{1}.pseudorange_bias = zeros(32, 1);
+        x_hat{1}.doppler_shift_bias = zeros(32, 1); 
+    end
     
+    window = 1;    
     for k=1:num_samples-1
         t_Rk = x_hat{k}.time;
         t_Rkp1 = dataset.pseudorange(k+1, 2);
@@ -52,22 +79,39 @@ function x_hat = filter_dataset(dataset_name, mode, gain_mode, process_gain)
         
         SV = visible_satellite_filter(pseudorange_kp1);
 
-        [ephem_kp1 pseudo] = formatdata(dataset.ephem,pseudorange_kp1,SV');
+        [ephem_kp1, pseudo] = formatdata(dataset.ephem,pseudorange_kp1,SV');
         Doppshift = format_doppler_shift(ephem_kp1, doppler_shift_kp1);
     
         pseudoR = pseudo(3:2:end)';
+        pseudorange_bias = zeros(size(pseudoR));
+        doppler_shift_bias = zeros(size(Doppshift));
+        if bias
+            for i=1:length(SV)
+                if SV <= 32
+                    pseudorange_bias(i) = x_hat{k}.pseudorange_bias(SV(i));
+                    % This is opposite of what I had thought, but the hypothesis tests indicate this is the correct way and a negative sign biases it.
+                    doppler_shift_bias(i) = x_hat{k}.doppler_shift_bias(SV(i));
+                end
+            end
+        end
 
-        [posOBS,~,~,~,sigmaPRk,sigmaDoppk,Q,Qv] = ...
+        [posOBS,~,~,SVsused,sigmaPRk,sigmaDoppk,Q,Qv,pseudorange_bias, doppler_shift_bias] = ...
                solveposvelod_DOP(ephem_kp1,pseudoR,Doppshift, x_hat{k}.position',t_Rkp1,...
                           dataset.ion_params,iflagion,elevmask,dataset.weather.p,...
-                          dataset.weather.TdegK,dataset.weather.hrel,iflagna);
-                      
+                          dataset.weather.TdegK,dataset.weather.hrel,iflagna, pseudorange_bias, doppler_shift_bias);
+        if bias 
+            [~,~,~,~,~,~,~,~,pseudorange_bias, doppler_shift_bias] = ...
+                   solveposvelod_DOP(ephem_kp1,pseudoR,Doppshift, x_hat{k}.position',t_Rkp1,...
+                              dataset.ion_params,iflagion,elevmask,dataset.weather.p,...
+                              dataset.weather.TdegK,dataset.weather.hrel,iflagna);
+        end
+          
         if ~isnan(sigmaPRk)
-            sigmaPR = sigmaPRk;
+            sigma_pr_history(k+1) = sigmaPRk;
         end
         
         if ~isnan(sigmaDoppk)
-            sigmaDopp = sigmaDoppk;
+            sigma_dopp_history(k+1) = sigmaDoppk;
         end
 
         measurements = [];
@@ -76,17 +120,109 @@ function x_hat = filter_dataset(dataset_name, mode, gain_mode, process_gain)
         measurements.velocity = posOBS(6:8)';
         measurements.clock_offset = c*posOBS(5);
         measurements.clock_rate_offset = c*posOBS(9);
-        measurements.sigmaPR = sigmaPR;
-        measurements.sigmaDopp = sigmaDopp;
+
+        sigma_window = 60;
+        sigma_pr_data = sigma_pr_history(max(1,k-sigma_window):k+1);
+        sigma_dopp_data = sigma_dopp_history(max(1,k-sigma_window):k+1);
+        measurements.sigmaPR = sqrt(median(sigma_pr_data(sigma_pr_data ~= 0).^2));
+        measurements.sigmaDopp = sqrt(median(sigma_dopp_data(sigma_dopp_data ~= 0).^2));
+       
+        %if isnan(measurements.sigmaPR)
+            % 11 - triphammer w/ bias
+            % 4 - airport w/ bias
+            % 2.2 - airport w/o bias
+            % 1.78 - stationary w/ bias - tune Q to 0.25e-3I instead
+            % stationary w/o bias - Q = 1e-6I
+            %measurements.sigmaPR = 1.78;
+            %measurements.sigmaPR = 1.78;
+            %measurements.sigmaDopp = 1;%0.15;
+        %end
+
         measurements.Q = Q;
         measurements.Qv = Qv;
+        
+        if k > 40
+            measurements.Cv = zeros(8);
+            for i=k-40:k
+                measurements.Cv = measurements.Cv + x_hat{i}.innovation(1:8) * x_hat{i}.innovation(1:8)';
+            end
+            measurements.Cv = measurements.Cv / 40;
+        else
+            measurements.Cv = process_gain*eye(8);
+        end
+        
+        bias_window = 20;
+        if bias
+            if ~isempty(pseudorange_bias)
+                pseudorange_var = zeros(size(pseudorange_bias));
+                doppler_shift_var = zeros(size(doppler_shift_bias));
+                for i=1:length(SVsused)
+                    pseudorange_bias_history(SVsused(i),k+1) = pseudorange_bias(i);
+                    doppler_shift_bias_history(SVsused(i),k+1) = doppler_shift_bias(i);
+                
+                    if k > bias_window
+                        pr_data = pseudorange_bias_history(SVsused(i),k-bias_window:k+1);
+                        pr_data = pr_data(pr_data ~= 0);
+                        dop_data = doppler_shift_bias_history(SVsused(i),k-bias_window:k+1);
+                        dop_data = dop_data(dop_data ~= 0);
+                        pseudorange_bias(i) = pr_data(end);
+                        doppler_shift_bias(i) = dop_data(end);
+                        pseudorange_var(i) = var(pr_data(pr_data ~= 0));
+                        doppler_shift_var(i) = var(dop_data(dop_data ~= 0));
+                    else
+                        pseudorange_bias(i) = 0;
+                        doppler_shift_bias(i) = 0;
+                        pseudorange_var(i) = 0;
+                        doppler_shift_var(i) = 0;
+                    end
+                end
+                measurements.pseudorange_bias = [SVsused pseudorange_bias];
+                measurements.doppler_shift_bias = [SVsused doppler_shift_bias];
+                measurements.pseudorange_var = [SVsused pseudorange_var];
+                measurements.doppler_shift_var = [SVsused doppler_shift_var];
+            else
+                measurements.pseudorange_bias = zeros(0,2);
+                measurements.doppler_shift_bias = zeros(0,2);
+                measurements.pseudorange_var = zeros(0,2);
+                measurements.doppler_shift_var = zeros(0,2);
+            end
+        end
 
         dt = measurements.time - t_Rk;
                 
         deltaTRk = dt/(1 + x_hat{k}.clock_rate_offset/c);
-
+        
         if strcmp(mode, 'feedback')
-            x_hat{k+1} = feedback(deltaTRk, x_hat{k}, measurements, gain_mode, process_gain);
+            x_hat{k+1} = feedback(deltaTRk, x_hat{k}, measurements, gain_mode, process_gain, measurement_gain);
+            if isfield(x_hat{k+1}.metadata, 'S')
+                S = x_hat{k+1}.metadata.S;
+                v = x_hat{k+1}.innovation;
+                t = v(1:8)' / S(1:8,1:8) * v(1:8);
+                t_history(k+1) = t;
+                t = t_history(t_history ~= 0);
+                if length(t) >= 20
+                    t = sum(t)/length(t);
+        
+                    n_v = 8;
+                    N = length(t);
+
+                    alpha = 0.05;
+                    r1 = chi2inv( alpha/2,  N*n_v ) / N;
+                    r2 = chi2inv( 1 - alpha/2,  N*n_v ) / N;
+                    pass = (t > r1) && (t < r2);
+                    pass = true;
+                    if ~pass
+                        A = process_matrix (deltaTRk, bias);
+                        x = state_vector (x_hat{k});
+                        Ax = A*x;
+                        Q = zeros(11);
+                        Q(7:9,7:9) = process_gain*eye(3);
+                        P = A*x_hat{k}.covariance*A' + Q;
+                        x_hat{k+1} = create_state (Ax, measurements.time, zeros(8,1), P, [], [], [], [], 0);
+                        t_history(k+1) = 0;
+                    end
+                end
+            end
         elseif strcmp(mode, 'absolute')
             x_hat{k+1} = measurements;
         elseif strcmp(mode, 'integrate')

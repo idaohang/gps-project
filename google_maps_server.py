@@ -47,5 +47,5 @@ loader = tornado.template.Loader(__static_path__)
 if __name__ == '__main__':
     tornado.options.parse_command_line()
 
-    __application__.listen(8889)
+    __application__.listen(8888)
     tornado.ioloop.IOLoop.instance().start()

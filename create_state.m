@@ -1,4 +1,4 @@
-function state = create_state (x, time, innovation, covariance, Phi, discontinuity)
+function state = create_state (x, time, innovation, covariance, Phi, residual, process_gain, gain, metadata)
     state = [];
     state.time = time;
     state.position = x(1:3);
@@ -9,5 +9,13 @@ function state = create_state (x, time, innovation, covariance, Phi, discontinui
     state.innovation = innovation;
     state.covariance = covariance;
     state.Phi = Phi;
-    state.discontinuity = discontinuity;
+    state.residual = residual;
+    state.process_gain = process_gain;
+    state.gain = gain;
+    state.metadata = metadata;
+    
+    if length(x) > 11
+        state.pseudorange_bias = x(12:43);
+        state.doppler_shift_bias = x(44:75);
+    end
 end

@@ -1,4 +1,4 @@
-function [names, xhats] = build_geojson_results ()
+function xhats = build_geojson_results ()
     datasets = {
         'airportloop', ...
         'cudtrt13triphammercu', ...
@@ -18,9 +18,9 @@ function [names, xhats] = build_geojson_results ()
     };
 
     process_gains = {0.1, 1, 10};
+    adaptive_process_gains = {false, true};
     
     xhats = {};
-    names = {};
 
     for i=1:length(datasets)
         dataset = datasets{i};
@@ -28,33 +28,40 @@ function [names, xhats] = build_geojson_results ()
         for j=1:length(static_gain_modes)
             gain_mode = static_gain_modes{j};
             disp(['=> ' gain_mode])
-            xhat = filter_dataset(dataset, 'feedback', gain_mode, 1);
+            xhat = filter_dataset(dataset, 5, 'feedback', gain_mode, 1, false);
             name = [dataset '-' strrep(gain_mode, '-', '_')];
-            names{end+1} = name;
-            xhats{end+1} = xhat;
+            xhats{end+1} = [];
+            xhats{end}.name = name;
+            xhats{end}.xhat = xhat;
             save_as_geojson(['receiver_paths/' name '.json'], xhat, name, false);
         end
         for j=1:length(kalman_gain_modes)
             gain_mode = kalman_gain_modes{j};
             disp(['=> ' gain_mode])
             for k=1:length(process_gains)
-                process_gain = process_gains{k};
-                xhat = filter_dataset(dataset, 'feedback', gain_mode, process_gain);
-                name = [dataset '-' strrep(gain_mode, '-', '_') '_' strrep(num2str(process_gain),'.','_')];
-                names{end+1} = name;
-                xhats{end+1} = xhat;
-                save_as_geojson(['receiver_paths/' name '.json'], xhat, name, true);
+                for l=1:length(adaptive_process_gains)
+                    adaptive_process_gain = adaptive_process_gains{l};
+                    process_gain = process_gains{k};
+                    xhat = filter_dataset(dataset, 5, 'feedback', gain_mode, process_gain, adaptive_process_gain);
+                    name = [dataset '-' strrep(gain_mode, '-', '_') '_' strrep(num2str(process_gain),'.','_') '_' num2str(adaptive_process_gain)];
+                    xhats{end+1} = [];
+                    xhats{end}.name = name;
+                    xhats{end}.xhat = xhat;
+                    save_as_geojson(['receiver_paths/' name '.json'], xhat, name, true);
+                end
             end
         end
-        xhat = filter_dataset(dataset, 'absolute');
+        xhat = filter_dataset(dataset, 5, 'absolute', 1, false);
         name = [dataset '-absolute'];
-        names{end+1} = name;
-        xhats{end+1} = xhat;
+        xhats{end+1} = [];
+        xhats{end}.name = name;
+        xhats{end}.xhat = xhat;
         save_as_geojson(['receiver_paths/' name '.json'], xhat, name, false);
-        xhat = filter_dataset(dataset, 'integrate');
+        xhat = filter_dataset(dataset, 5, 'integrate', 1, false);
         name = [dataset '-integrate'];
-        names{end+1} = name;
-        xhats{end+1} = xhat;
+        xhats{end+1} = [];
+        xhats{end}.name = name;
+        xhats{end}.xhat = xhat;
         save_as_geojson(['receiver_paths/' name '.json'], xhat, name, false);
     end
 end

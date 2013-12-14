@@ -1,0 +1,51 @@
+\section{Introduction}\label{sec:intro}
+In real world systems contaminated with noise, it's often desirable to fuse measurements and predictions from multiple sources in order to leverage orthogonal information.  One widely used filter is the Kalman filter.  A Kalman filter is applicable when the states are linear with respect to both some physical process model as well as some measurements and both the process and measurements are contaminated by some Gaussian white noise.
+
+In particular, let $x_k$ be the state at epoch $k$, $A$ be the process matrix that predicts $x_{k+1}$ given $x_k$, $z_k$ be the measurements, $R_k$ be the measurement noise covariance matrix, and $Q_k$ be the process noise covariance matrix.  Additionally, let $C$ be a matrix that maps states to measurements and let $G$ be a matrix that maps the process noise covariance matrix to the state space.  The family of systems that take no control input and that can be modeled by a Kalman filter is described by the following equations:\\
+\begin{equation}
+\begin{aligned}
+x_{k} &=& A x_{k-1} + G q_{k}\\
+z_{k} &=& C x_{k-1} + r_{k}\\
+q_{k} &\sim& N(0, Q_k)\\
+r_{k} &\sim& N(0, R_k)\\
+E[qr^T] &=& 0
+\end{aligned}
+\end{equation}
+
+The Kalman filtering algorithm can be decomposed into two steps.  First, the process model is used to compute an a priori prediction distribution, $N(\hat{x}_{k|k-1}$, $P_{k|k-1})$, called the prediction step.  Then, the measurements are fused to produce an improved a posteriori estimate distribution, $N(\hat{x}_{k|k}$, $P_{k|k})$, during the update step.  Assuming the process is modeled correctly and the noise covariance matrices are correct, then the Kalman filter provides the optimal estimate of the state.
+
+The Kalman filter equations are as follows:\\
+{\bf Prediction:}
+\begin{equation}
+\begin{aligned}
+\hat{x}_{k|k-1} &=& A \hat{x}_{k-1|k-1}\\
+P_{k|k-1} &=& A P_{k-1|k-1} A^T + Q_k
+\end{aligned}
+\end{equation}
+{\bf Update:}
+\begin{equation}
+\begin{aligned}
+\tilde{y}_k &=& z_k - C \hat{x}_{k|k-1}\\
+S_k &=& C P_{k|k-1} C^T + R_k\\
+K_k &=& P_{k|k-1} C^T S_k^{-1}\\
+\hat{x}_{k|k} &=& \hat{x}_{k|k-1} + K_k \tilde{y}_k\\
+P_{k|k} &=& (I - K_k C) P_{k|k-1}
+\end{aligned}
+\end{equation}
+where
+\begin{equation}
+\begin{aligned}
+E[x_k - \hat{x}_{k|k}] &=& 0\\
+E[(x_k - \hat{x}_{k|k})(x_k - \hat{x}_{k|k})^T] &=& P_{k|k}\\
+E[x_k - \hat{x}_{k|k-1}] &=& 0\\
+E[(x_k - \hat{x}_{k|k-1})(x_k - \hat{x}_{k|k-1})^T] &=& P_{k|k-1}\\
+E[\tilde{y}_k] &=& 0\\
+E[\tilde{y}_k\tilde{y}_k^T] &=& S_k\\
+\end{aligned}
+\end{equation}
+Briefly, the prediction step propagates the state forward using the process model and convolves it with the process noise model, $N(A\hat{x}_{k-1|k-1}, E[(Ap_{k-1})(Ap_{k-1})^T]) \ast N(0, Q_k)$ where $p_{k-1} \sim P_{k-1|k-1}$.
+ The update step uses the definitions of $P_{k|k}$, $\hat{x}_{k|k}$, $\tilde{y}_k$, and $z_k$, and a series of substitutions to arrive at the optimal Kalman gain.
+
+While the Kalman filter offers optimality when the underlying assumptions hold, it is often the case that they do not hold.  Noise is often correlated, biases are often present, the process model is often not expressive of the true process, and noise covariances are often unknown.  Indeed, biases in GPS measurements are present in the form of multipath error and differences between true atmospheric delays and approximate atmospheric models.  It is very easy to qualitatively validate the design of a filter, but more importantly, it's desireable to understand how well we've modeled the system, that is, do any of the underlying assumptions actually hold and if so, how confident are we that they hold?
+
+We explore the use of statistical hypothesis tests to help drive the tuning of our Kalman fitler parameters.  Section~\ref{sec:theory} details the high-level design of our filter and describes a test to determine whether our filter is consistent, that is, $\tilde{y}_k \sim N(0,S_k)$.  We also briefly explore extending the filter to include per-satellite biases in the filter state and show that we can decrease uncertainty while maintaining consistency.  Section~\ref{sec:experiments} describes a series of experiments performed on both stationary receiver data, where we can emperically derive the measurement covariance matrix and the process model intuitively holds well, as well as data from a moving receiver where assumptions regarding the process model are frequently broken.  We conclude with Section~\ref{sec:conclusion} describing a few ideas for reducing biases and better modeling the process.

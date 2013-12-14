@@ -1,4 +1,4 @@
-function [gain, covariance] = static_fast_gain (deltaTRk, ~, ~, ~, ~, ~, ~)
+function [gain, covariance, metadata] = static_fast_gain (deltaTRk, ~, ~, ~, ~, ~, ~)
     gain = zeros(11, 8);
     gain(1:3,1:3) = 8.44612e-3 * eye(3);
     gain(1:3,4:6) = 0.495778 * deltaTRk * eye(3);
@@ -15,4 +15,6 @@ function [gain, covariance] = static_fast_gain (deltaTRk, ~, ~, ~, ~, ~, ~)
     gain(11, 7) = 2.07034e-10/deltaTRk;
     gain(11, 8) = 0.999997;
     covariance = eye(11);
+
+    metadata = [];
 end

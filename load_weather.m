@@ -16,6 +16,10 @@ function weather = load_weather (dataset_name)
        TdegC = (TdegF - 32)*(5/9);
        TdegK = TdegC + 273.15;
        hrel = 0.81; 
+    elseif strcmp(dataset_name, 'stationary')
+       p = 1015.46;
+       TdegK = 4.83 + 273.15;
+       hrel = 0.76;
     end
     
     weather = [];
