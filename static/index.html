@@ -60,7 +60,7 @@
 
                 var colors = ['#1f77b4', '#8c564b', '#ff7f0e', '#e377c2', '#2ca02c', '#7f7f7f', '#d62728', '#bcbd22', '#9467bd', '#17becf', '#9edae5'];
 
-                var types = ['static_slow', 'static_fast', 'kalman_steady_state', 'kalman_time_varying_0', 'kalman_time_varying_1'];//, 'absolute', 'integrate', 'static_slow', 'static_fast', 'kalman_steady_state_0_1_0', 'kalman_steady_state_1_0', 'kalman_steady_state_10_0', 'kalman_time_varying_0_1_0', 'kalman_time_varying_1_0', 'kalman_time_varying_10_0', 'kalman_time_varying_0_1_1'];
+                var types = ['test', 'absolute', 'integrate','kalman_steady_state', 'static_slow','kalman_time_varying_1',   'static_fast', 'kalman_time_varying_0',  ];//, 'absolute', 'integrate', 'static_slow', 'static_fast', 'kalman_steady_state_0_1_0', 'kalman_steady_state_1_0', 'kalman_steady_state_10_0', 'kalman_time_varying_0_1_0', 'kalman_time_varying_1_0', 'kalman_time_varying_10_0', 'kalman_time_varying_0_1_1'];
 
                 $.each(types, function (k, v) {
                     $.getJSON ('/'+dataset+'/'+v, function (data) { 

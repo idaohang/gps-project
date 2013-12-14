@@ -141,16 +141,6 @@ function x_hat = filter_dataset(dataset_name, elevmask, bias, mode, gain_mode, p
         measurements.Q = Q;
         measurements.Qv = Qv;
         
-        if k > 40
-            measurements.Cv = zeros(8);
-            for i=k-40:k
-                measurements.Cv = measurements.Cv + x_hat{i}.innovation(1:8) * x_hat{i}.innovation(1:8)';
-            end
-            measurements.Cv = measurements.Cv / 40;
-        else
-            measurements.Cv = process_gain*eye(8);
-        end
-        
         bias_window = 20;
         if bias
             if ~isempty(pseudorange_bias)

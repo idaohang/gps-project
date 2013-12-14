@@ -7,3 +7,18 @@ Our first attempt at designing the measurement covariance matrix involved using 
 
 \subsection{Stationary Receiver}
 Figure~\ref{fig:stationary_map} shows the estimated position of the receiver's antenna at the end of the dataset sequence.  The consistency test was used to tune the process covariance matrix to $2\times10^-3I$ and the measurement covariance matrix was not rescaled.  
+
+\subsection{Airport Dataset}
+Figure~\ref{fig:airportloop_map} shows the estimated trajectory of the vehicle using our time-varying Kalman filter.  This was estimated using a process covariance matrix of $Q = 10I$ and a measurement covariance matrix scaled by $3.5$ in order to pass the consistency test.  This is a very easy dataset, except one set of trees pose a significant challenge for the filter.  The covariance grows quite large until the vehicle passes the trees.  Figure~\ref{fig:airportloop_map_bad} illustrates what happens if we do not scale the measurement covariance matrix to ensure a consistent filter. 
+
+\begin{figure}
+\includegraphics[width=\columnwidth]{airportloop_map}
+\caption{Estimated trajectory for \texttt{airportloop} using time-varying Kalman filter adjusted to pass consistency test.  Inset: Highly erroneous navigation solutions lead to an increase in estimation distribution covariance.}
+\label{fig:airportloop_map}
+\end{figure} 
+
+\begin{figure}
+\includegraphics[width=\columnwidth]{airportloop_map_bad}
+\caption{Without ensuring filter consistency, the filter can grow over-confident and Kalman filter assumptions that lead to optimality can be broken.  Here, the vehicle is estimated to be on the sidewalk.}
+\label{fig:airportloop_map_bad}
+\end{figure}
