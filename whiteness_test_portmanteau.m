@@ -34,7 +34,4 @@ function reject = whiteness_test_portnameteau (x, h, alpha)
 
     disp(Qh)
     disp(pp)
-    critlo=chi2inv(alpha/2,dof)
-    crithi=chi2inv(1-alpha/2,dof)
-    crit1tail=chi2inv(1-alpha,dof)
 end

@@ -1,5 +1,9 @@
 function next_state = feedback (deltaTRk, state, measurements, gain_mode, process_gain, measurement_gain)
     bias = isfield(state, 'pseudorange_bias');
+    
+    if deltaTRk > 2
+        'here'
+    end
 
     R = measurement_gain*measurement_covariance (measurements, bias);
 
@@ -40,7 +44,7 @@ function next_state = feedback (deltaTRk, state, measurements, gain_mode, proces
     prediction = A * x;
     innovation = z - C * prediction;
     
-    Q = process_covariance (deltaTRk*process_gain, bias);
+    Q = process_covariance (process_gain, bias);
     
     [gain, covariance, metadata] = gain_fcn (deltaTRk, A, G, C, Q, R, state.covariance);
     

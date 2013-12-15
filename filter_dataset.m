@@ -78,6 +78,17 @@ function x_hat = filter_dataset(dataset_name, elevmask, bias, mode, gain_mode, p
         doppler_shift_kp1 = dataset.doppler_shift(k+1, :);
         
         SV = visible_satellite_filter(pseudorange_kp1);
+        
+        if isempty(SV)
+            A = process_matrix (deltaTRk, bias);
+            x = state_vector (x_hat{k});
+            Ax = A*x;
+            Q = zeros(11);
+            Q(7:9,7:9) = process_gain*eye(3);
+            P = A*x_hat{k}.covariance*A' + Q;
+            x_hat{k+1} = create_state (Ax, t_Rkp1, zeros(8,1), P, [], [], [], [], 0);
+            continue
+        end
 
         [ephem_kp1, pseudo] = formatdata(dataset.ephem,pseudorange_kp1,SV');
         Doppshift = format_doppler_shift(ephem_kp1, doppler_shift_kp1);
@@ -217,7 +228,7 @@ function x_hat = filter_dataset(dataset_name, elevmask, bias, mode, gain_mode, p
             x_hat{k+1} = measurements;
         elseif strcmp(mode, 'integrate')
             x_hat{k+1} = measurements;
-            x_hat{k+1}.position = x_hat{k}.position + measurements.velocity;
+            x_hat{k+1}.position = x_hat{k}.position + deltaTRk*measurements.velocity;
         end
     end
     

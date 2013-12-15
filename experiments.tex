@@ -5,7 +5,7 @@ We evaluate several versions of our time-varying Kalman filters, each with diffe
 
 Our first attempt at designing the measurement covariance matrix involved using $\sigma_{PR}$ and $\sigma_D$ from \texttt{solveposvelod}.  In practice, we found two issues with these estimates, both stemming from being estimated by so few satellites at each epoch.  One is that they tend to vary quickly and the other is that they seem to produce filters that were over-confidence in the measurements.  We instead take a moving average of the estimated variances.  Then we tuned the process covariance matrix until the filter passed our consistency test.  For the moving datasets, tuning the process covariance matrix had very little impact on whether or not we could pass the consistency test, presumably due to process mis-modeling.  Instead, we scaled the measurement covariance up by some constant factor for the entire dataset until we could pass the test.
 
-We applied the Ljung-Box hypothesis test to each track's innovations with many parameters, different subsets of the innovations (position only, velocity only, etc.), different subsets of the tracks, and so on.  It consistently rejected $H_0$, that is our innovations were correlated violating the white Gaussian noise assumption.
+We applied the Ljung-Box hypothesis test to each track's innovations with many parameters, different subsets of the innovations (position only, velocity only, etc.), different subsets of the tracks, and so on.  It consistently rejected $H_0$ with $\alpha = 0.05$, that is, our innovations were correlated violating the white Gaussian noise assumption.
 
 \subsection{Stationary Receiver}
 Figure~\ref{fig:stationary_map} shows the estimated position of the receiver's antenna at the end of the dataset sequence.  The consistency test was used to tune the process covariance matrix to $2\times10^{-3}I$ and the measurement covariance matrix was not rescaled.
@@ -23,6 +23,18 @@ Using the antenna's surveyed location, we compute the positional error.  Figure~
 \caption{Error of estimated receiver antenna position with respect to sample time.  The bias adjusted model outperforms the base model in some cases.}
 \label{fig:stationary_error}
 \end{figure}
+
+Finally, we apply the Ljung-Box test and Mardia's test to the estimated jerk of the system to check for process model mismatch for the case of the time-varying Kalman filter without bias adjustment.  The Ljung-Box test with $\alpha = 0.05$ rejects the null hypothesis test which means the jerk is correlated.  It accepts $H_0$ for Mardia's test with p-value 0.48 for the skewness statistic and 0.1242 for the kurtosis statistic.  When applied to the bias-adjusted version of the time-varying Kalman filter, Mardia's test rejects $H_0$ suggesting that we are indeed introducing a new systematic bias.
+
+Figure~\ref{fig:nis_stationary} shows how the normalized innovations squared statistic, $t_k$ changes over time.  The green lines indicate the test bounds for a 99\% confidence interval and the blue line indicates the test value.  These normalized innovations squared were fairly consistent, so it seems likely that this is a good way to tune the filter parameters and expect it to generalize well.
+
+\begin{figure}
+\includegraphics[width=\columnwidth]{nis_stationary}
+\caption{Normalized innovation squared values for the \texttt{stationary} dataset.  The green lines represent the test bounds and the blue line is the test statistic.}
+\label{fig:nis_stationary}
+\end{figure}
+
+
 
 \subsection{Airport Dataset}
 Figure~\ref{fig:airportloop_map} shows the estimated trajectory of the vehicle using our time-varying Kalman filter.  This was estimated using a process covariance matrix of $Q = 10I$ and a measurement covariance matrix scaled by $3.5$ in order to pass the consistency test.  This is a very easy dataset, except one set of trees poses a significant challenge for the filter.  The covariance grows quite large until the vehicle passes the trees.  Figure~\ref{fig:airportloop_map_bad} illustrates what happens if we do not scale the measurement covariance matrix to ensure a consistent filter.

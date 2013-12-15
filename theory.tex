@@ -133,6 +133,7 @@ Based on the assumptions underlying the Kalman filter one might wish to answer t
 \item Are my filter's innovations white?
 \item Is my estimator consistent?
 \item Might a particular measurement destroy the integrity of my filter?
+\item Does my choice of process model match my data?
 \end{enumerate}
 Each of these questions can be answered with well-established hypothesis tests.
 
@@ -179,3 +180,16 @@ $t_k$ is often called the normalized innovations squared.  According to a two-ta
 
 \medskip
 \noindent{\bf Failure Rejection} The same consistency test described earlier for filter validation and tuning can be applied online to the entire history of innovations.  If the measurement is deemed to make the consistency test reject $H_0$, then discard the measurement, but still propagate the predicted state forward.
+
+\medskip
+\noindent{\bf Process Mismatch} An implicit assumption regarding the choice of a constant acceleration motion model with white Gaussian acceleration noise is that the jerk of the system is modeled by that white Gaussian noise.  We can apply the Ljung-Box test to test for independence, but we can also use Mardia's test to test for multivariate normality.  Mardia's test statistic is composed of a skewness statistic, $A$, and a kurtosis statistic, $B$.\\
+$H_0$: The multivariate quantities are normally distributed.\\
+$H_1$: The multivariate quantities are not normally distributed.\\
+\begin{eqnarray*}
+\hat{\Sigma} &=& \frac{1}{T}\sum_{i=1}^Tv_iv_i^T\\
+\hat{\mu} &=& \frac{1}{T}\sum_{i=1}^Tv_i\\
+\bar{v}_i &=& v_i - \hat{\mu}\\
+A &=& \frac{1}{6T}\sum_{i=1}^T\sum_{j=1}^T(\bar{v_i}^T \hat{\Sigma}^{-1} \bar{v_i})^3\\
+B &=& \sqrt{\frac{T}{8k(k+1)(k+2)}} \\&&\left\{\frac{1}{T}\sum_{i=1}^n(\bar{v}_i^T \hat{\Sigma}^{-1} \bar{v_i})^2 - k(k+2)\right\}
+\end{eqnarray*}
+Reject $H_0$ if $A > \chi^2_{1-\alpha, \frac{1}{6}k(k+1)(k+2)}$ or if $|B| > N_{1-\alpha}$ where $N_x$ is the CDF of $N(0,1)$ at $x$.

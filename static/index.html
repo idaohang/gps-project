@@ -58,7 +58,7 @@
 
                 var dataset = '{{ dataset }}';
 
-                var colors = ['#1f77b4', '#8c564b', '#ff7f0e', '#e377c2', '#2ca02c', '#7f7f7f', '#d62728', '#bcbd22', '#9467bd', '#17becf', '#9edae5'];
+                var colors = ['#ff7f0e', '#9467bd','#2ca02c', '#1f77b4', '#8c564b', '#e377c2',  '#7f7f7f', '#d62728', '#bcbd22', '#17becf', '#9edae5'];
 
                 var types = ['test', 'absolute', 'integrate','kalman_steady_state', 'static_slow','kalman_time_varying_1',   'static_fast', 'kalman_time_varying_0',  ];//, 'absolute', 'integrate', 'static_slow', 'static_fast', 'kalman_steady_state_0_1_0', 'kalman_steady_state_1_0', 'kalman_steady_state_10_0', 'kalman_time_varying_0_1_0', 'kalman_time_varying_1_0', 'kalman_time_varying_10_0', 'kalman_time_varying_0_1_1'];
 
@@ -83,6 +83,7 @@
                 var googleMapsVector = new GeoJSON(data, googleOptions);
 
                 $.each(googleMapsVector, function (k, v) {
+                    if (k ==1)return;
                     v.setMap(map);
                 });
 
