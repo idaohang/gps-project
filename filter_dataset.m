@@ -98,9 +98,8 @@ function x_hat = filter_dataset(dataset_name, elevmask, bias, mode, gain_mode, p
         doppler_shift_bias = zeros(size(Doppshift));
         if bias
             for i=1:length(SV)
-                if SV <= 32
+                if SV(i) <= 32
                     pseudorange_bias(i) = x_hat{k}.pseudorange_bias(SV(i));
-                    % This is opposite of what I had thought, but the hypothesis tests indicate this is the correct way and a negative sign biases it.
                     doppler_shift_bias(i) = x_hat{k}.doppler_shift_bias(SV(i));
                 end
             end
@@ -138,17 +137,6 @@ function x_hat = filter_dataset(dataset_name, elevmask, bias, mode, gain_mode, p
         measurements.sigmaPR = sqrt(median(sigma_pr_data(sigma_pr_data ~= 0).^2));
         measurements.sigmaDopp = sqrt(median(sigma_dopp_data(sigma_dopp_data ~= 0).^2));
        
-        %if isnan(measurements.sigmaPR)
-            % 11 - triphammer w/ bias
-            % 4 - airport w/ bias
-            % 2.2 - airport w/o bias
-            % 1.78 - stationary w/ bias - tune Q to 0.25e-3I instead
-            % stationary w/o bias - Q = 1e-6I
-            %measurements.sigmaPR = 1.78;
-            %measurements.sigmaPR = 1.78;
-            %measurements.sigmaDopp = 1;%0.15;
-        %end
-
         measurements.Q = Q;
         measurements.Qv = Qv;
         
@@ -231,6 +219,4 @@ function x_hat = filter_dataset(dataset_name, elevmask, bias, mode, gain_mode, p
             x_hat{k+1}.position = x_hat{k}.position + deltaTRk*measurements.velocity;
         end
     end
-    
-
 end

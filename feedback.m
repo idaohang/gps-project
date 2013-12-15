@@ -1,10 +1,6 @@
 function next_state = feedback (deltaTRk, state, measurements, gain_mode, process_gain, measurement_gain)
     bias = isfield(state, 'pseudorange_bias');
     
-    if deltaTRk > 2
-        'here'
-    end
-
     R = measurement_gain*measurement_covariance (measurements, bias);
 
     A = process_matrix (deltaTRk, bias);
