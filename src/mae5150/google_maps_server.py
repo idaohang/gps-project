@@ -8,6 +8,10 @@ import tornado.web
 import tornado.ioloop
 import tornado.template
 
+class IndexHandler(tornado.web.RequestHandler):
+    def get (self):
+        self.redirect('/airportloop', permanent=True)
+
 class MainHandler(tornado.web.RequestHandler):
     def __init__ (self, *request, **kwargs):
         super(MainHandler, self).__init__ (*request, **kwargs)
@@ -36,6 +40,7 @@ class ReceiverPathHandler(tornado.web.RequestHandler):
 __static_path__ = os.path.join(os.path.dirname(__file__), 'static')
 
 __application__ = tornado.web.Application([
+        (r'/', IndexHandler),
         (r'/(.*\.js)', tornado.web.StaticFileHandler, {'path':__static_path__}),
         (r'/([a-zA-Z0-9_\-\.]+)', MainHandler),
         (r'/([a-zA-Z0-9_\-\.]+)/([a-zA-Z0-9_\-\.]+)', ReceiverPathHandler),
