@@ -48,7 +48,7 @@ Figure~\ref{fig:airportloop_map} shows the estimated trajectory of the vehicle u
 
 \begin{figure}
 \includegraphics[width=\columnwidth]{airportloop_map_bad}
-\caption{Without ensuring filter consistency, the filter can grow over-confident and Kalman filter assumptions that lead to optimality can be broken.  Here, the vehicle is estimated to be on the sidewalk with high confidence.}
+\caption{Without ensuring filter consistency, the filter can grow over-confident and Kalman filter assumptions that lead to optimality can be broken.  Left: The vehicle is estimated to be on the sidewalk with high confidence.  Right: The original navigation solution is highly erroneous.}
 \label{fig:airportloop_map_bad}
 \end{figure}
 
@@ -62,16 +62,25 @@ Figure~\ref{fig:nis} shows how the normalized innovations squared statistic, $t_
 
 Since our time-varying Kalman filter propagates an error covariance matrix through the track, we can also evaluate its performance when there is an outage.  Rather than skip missing observations entirely, we perform the prediction step and propagate the a priori state estimate forward.  If we skipped the missing entries entirely, then the estimate's covariance matrix would not adequately grow to accomidate and mismatch between the process and the model.  It also improves the numerical integration of the vehicle's trajectory.  Figure~\ref{fig:outage} shows one such outage.  GPS measurements are disabled for 5 seconds.  The process covariance matrix was tuned down to $Q = 0.1I$ to improve visualization.
 
-\begin{figure}[!b]
+\begin{figure}[!t]
 \includegraphics[width=\columnwidth]{outage}
-\caption{A artificial 5 second outage during the \texttt{airportloop} dataset.  A priori state estimates during outage marked 1-5.}
+\caption{An artificial 5 second outage during the \texttt{airportloop} dataset.  A priori state estimates during outage marked 1-5.}
 \label{fig:outage}
+\end{figure}
+
+This dataset did not exhibit any measurements with a large degree of corruption, so we artifically introduced zero-mean Gaussian noise to the pseudorange measurements for satellite 11 for the same 5 second interval as our outage experiment.  If our online consistency hypothesis test can correctly identify erroneous measurements, then the recovery should look exactly like if we did not make those measurements at all.  Figure~\ref{fig:corruption} shows the divergence between the correct trajectory and the measurement-corrupted tracjectory.  It also shows the normalized innovation squared measurements exhibit a large increase during this window.  We were unable to find a reliable way to apply the hypothesis test to automatically detect these outliers since the normalized innovation squared statistics vary over time.
+
+\begin{figure}[!b]
+\includegraphics[width=\columnwidth]{corruption}\\
+\includegraphics[width=\columnwidth]{nis_corruption}
+\caption{Top: Original trajectory in red with corrupted trajectory in orange.  Trajectory is corrupted by introducing zero-mean Gaussian noise to one satellite's pseudorange measurements for 5 seconds, indicated by the violet rectangle.  Bottom: Normalized innovation squared for this sequence.  Blue bars indicate the corruption range.}
+\label{fig:corruption}
 \end{figure}
 
 \subsection{cudtrt13triphammercu Dataset}
 This dataset contains examples of significant drift if velocity is simply integrated.  Figure~\ref{fig:track2_map} shows the different between the time-varying Kalman-filtered track and the integrated track.
 
-\begin{figure}
+\begin{figure}[!b]
 \includegraphics[width=\columnwidth]{track2_map}
 \caption{Estimated trajectory for \texttt{cudtrt13triphammercu} dataset using time-varying Kalman filter in red.  Integrated velocity shown in green.  Integrated velocity alone suffers from significant drift.  Inset: Erroneous measurements cause distribution covariance to increase significantly.}
 \label{fig:track2_map}
@@ -81,9 +90,9 @@ One aim for us was to use our online hypothesis test to identify the faulty meas
 
 Figure~\ref{fig:max_eigenvalue} shows that for the \texttt{cudtrt13triphammercu} dataset, all eigenvalues are within the unit circle, ensuring a stable filter at each sample time.
 
-\begin{figure}[!b]
+\begin{figure}[!t]
 \includegraphics[width=\columnwidth]{eigenvalues}
-\caption{Maximum absolute eigenvalues for time-varying Kalman filter on \texttt{cudtrt13triphammercu} dataset.}
+\caption{Maximum absolute eigenvalues of the closed-loop error dynamics state transition matrix for time-varying Kalman filter on \texttt{cudtrt13triphammercu} dataset.}
 \label{fig:max_eigenvalue}
 \end{figure}
 
