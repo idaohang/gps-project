@@ -156,8 +156,8 @@ function x_hat = filter_dataset(dataset_name, elevmask, bias, mode, gain_mode, p
                         dop_data = dop_data(dop_data ~= 0);
                         pseudorange_bias(i) = pr_data(end);
                         doppler_shift_bias(i) = dop_data(end);
-                        pseudorange_var(i) = var(pr_data(pr_data ~= 0));
-                        doppler_shift_var(i) = var(dop_data(dop_data ~= 0));
+                        pseudorange_var(i) = 1e5*var(pr_data(pr_data ~= 0));
+                        doppler_shift_var(i) = 1e5*var(dop_data(dop_data ~= 0));
                     else
                         pseudorange_bias(i) = 0;
                         doppler_shift_bias(i) = 0;
