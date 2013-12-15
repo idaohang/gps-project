@@ -47,6 +47,14 @@ Figure~\ref{fig:nis} shows how the normalized innovations squared statistic, $t_
 \label{fig:nis}
 \end{figure}
 
+Since our time-varying Kalman filter propagates an error covariance matrix through the track, we can also evaluate its performance when there is an outage.  Rather than skip missing observations entirely, we perform the prediction step and propagate the a priori state estimate forward.  If we skipped the missing entries entirely, then the estimate's covariance matrix would not adequately grow to accomidate and mismatch between the process and the model.  It also improves the numerical integration of the vehicle's trajectory.  Figure~\ref{fig:outage} shows one such outage.  GPS measurements are disabled for 5 seconds.  The process covariance matrix was tuned down to $Q = 0.1I$ to improve visualization.
+
+\begin{figure}
+\includegraphics[width=\columnwidth]{outage}
+\caption{A artificial 5 second outage during the \texttt{airportloop} dataset.  A priori state estimates during outage marked 1-5.}
+\label{fig:outage}
+\end{figure}
+
 \subsection{cudtrt13triphammercu Dataset}
 This dataset contains examples of significant drift if velocity is simply integrated.  Figure~\ref{fig:track2_map} shows the different between the time-varying Kalman-filtered track and the integrated track.
 
