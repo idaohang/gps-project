@@ -54,7 +54,7 @@ I_{3\times3} & 0\\
 \right]
 \end{equation}
 
-In order to best accomadate the geometric receiver-satellite configuration, the measurement covariance matrix is designed to consider the position and velocity DOP matrices, $Q_P$ and $Q_V$ for the position and velocity solutions respectively.  An additional assumption is that this measurement uncertainty can be accurately modeled using global $\sigma_{PR}$ and $\sigma_{D}$.  
+In order to best accommodate the geometric receiver-satellite configuration, the measurement covariance matrix is designed to consider the position and velocity DOP matrices, $Q_P$ and $Q_V$ for the position and velocity solutions respectively.  An additional assumption is that this measurement uncertainty can be accurately modeled using global $\sigma_{PR}$ and $\sigma_{D}$.  
 Let 
 \begin{equation}
 \sigma_{PR}^2Q_P = 
@@ -97,7 +97,7 @@ I_{3\times3} & 0 & 0 & 0\\
 \right]
 \end{equation}
 
-One thing that is immediately clear from this formulation is that while the Kalman filter considers measurement noise, it does so under the assumption that it is unbiased.  As stated earlier, there are several factors that lead to error in GPS observables, notably multipath and atmospheric mis-modeling.  These errors are often slowly varying, so in a small time window, they can be modeled as measurement bias.  We propose a simple extention to the suggested model by extending the state to include the core state plus per-satellite pseudorange and doppler shift biases.  These biases are introduced into the system as measurements via the residuals from the navigation and velocity solutions.
+One thing that is immediately clear from this formulation is that while the Kalman filter considers measurement noise, it does so under the assumption that it is unbiased.  As stated earlier, there are several factors that lead to error in GPS observables, notably multi-path and atmospheric mis-modeling.  These errors are often slowly varying, so in a small time window, they can be modeled as measurement bias.  We propose a simple extension to the suggested model by extending the state to include the core state plus per-satellite pseudorange and Doppler shift biases.  These biases are introduced into the system as measurements via the residuals from the navigation and velocity solutions.
 \begin{equation}
 x_{bk} = \left[
 \begin{array}{c}
@@ -138,7 +138,7 @@ Based on the assumptions underlying the Kalman filter one might wish to answer t
 Each of these questions can be answered with well-established hypothesis tests.
 
 \medskip
-\noindent{\bf Innovation Whiteness} In practice, this can be a difficult test to pass since it's clear that errors between measurements from GPS data are slowly varying and correlated.  However, it is something to test for to validate that claim.  There are many possible tests for whiteness of multivariate random variables.  We present the multivariate generalization of the Ljung-Box test.
+\noindent{\bf Innovation Whiteness} In practice, this can be a difficult test to pass since it's clear that errors between measurements from GPS data are slowly varying and correlated.  However, it is something to test for to validate that claim.  There are many possible tests for whiteness of multivariate random variables.  We present the multivariate generalization of the Ljung-Box test~\cite{1980}.
 
 Our hypothesis test is defined as follows:\\
 $H_0$: Innovations are independently distributed.\\
@@ -152,7 +152,7 @@ where $\tilde{y}_t$ is the innovation at epoch $t$, $C_i$ the multivariate sampl
 According to a one-tailed test, if $Q > \chi^2_{1-\alpha,K^2h}$ where $\chi^2_{x,v}$ is the CDF of the $\chi^2$ distribution with $v$ degrees of freedom at $x$, then we reject $H_0$.
 
 \medskip
-\noindent Informal Explaination - Consider a simpler statistic, the Box-Pierce test, $Q = T \sum_{j=1}^h tr\{C_j^T C_0^{-1} C_j C_0^{-1}\}$.
+\noindent Informal Explanation - Consider a simpler statistic, the Box-Pierce test, $Q = T \sum_{j=1}^h tr\{C_j^T C_0^{-1} C_j C_0^{-1}\}$.
 \begin{eqnarray*}
 tr\{C_j^T C_0^{-1} C_j C_0^{-1}\} &=& \sum_{a,b}[(C_j^T C_0^{-1})^T(C_j C_0^{-1})]_{a,b}\\
  &=& \sum_{a,b}[(C_0^{-T} C_j)(C_j C_0^{-1})]_{a,b}\\
@@ -173,16 +173,16 @@ For innovation dimensionality $K$ and track length $T$
 t_k &=& \tilde{y}_k^T S^{-1}_k \tilde{y}_k\\
 \bar{\epsilon} &=& \sum_{k=1}^T t_k\\
 \end{eqnarray*}
-$t_k$ is often called the normalized innovations squared.  According to a two-tailed test, if $\alpha/2 > \chi^2_{\bar{\epsilon}, TK}$ or $1-\alpha < \chi^2_{\bar{\epsilon}, TK}$, then reject $H_0$.
+$t_k$ is often called the normalized innovations squared~\cite{barshalom}.  According to a two-tailed test, if $\alpha/2 > \chi^2_{\bar{\epsilon}, TK}$ or $1-\alpha < \chi^2_{\bar{\epsilon}, TK}$, then reject $H_0$.
 
 \medskip
-\noindent Practical Considurations - Since this is a two-tailed test, it gives us information about whether or not our model parameters produce a consistent filter as well as in what direction we should tune it, if necessary.  The $\tilde{y}_k^T S^{-1}_k \tilde{y}_k$ essentially rescales the innovation from it's source distribution down to $N(0,I)$, assuming $S_k$ was the correct covariance to begin with.  If $\bar{\epsilon}$ is too large, then that means $S^{-1}_k$ was too large and $S_k$ was too small.  Increasing $Q_k$ or $R_k$ will increase $S_k$.  Similarly, if $\bar{\epsilon}$ is too small, then we should decrease $Q_k$ or $R_k$.
+\noindent Practical Considerations - Since this is a two-tailed test, it gives us information about whether or not our model parameters produce a consistent filter as well as in what direction we should tune it, if necessary.  The $\tilde{y}_k^T S^{-1}_k \tilde{y}_k$ essentially rescales the innovation from it's source distribution down to $N(0,I)$, assuming $S_k$ was the correct covariance to begin with.  If $\bar{\epsilon}$ is too large, then that means $S^{-1}_k$ was too large and $S_k$ was too small.  Increasing $Q_k$ or $R_k$ will increase $S_k$.  Similarly, if $\bar{\epsilon}$ is too small, then we should decrease $Q_k$ or $R_k$.
 
 \medskip
-\noindent{\bf Failure Rejection} The same consistency test described earlier for filter validation and tuning can be applied online to the entire history of innovations.  If the measurement is deemed to make the consistency test reject $H_0$, then discard the measurement, but still propagate the predicted state forward.
+\noindent{\bf Failure Rejection} The same consistency test described earlier for filter validation and tuning can be applied online to the entire history of innovations~\cite{6178052}.  If the measurement is deemed to make the consistency test reject $H_0$, then discard the measurement, but still propagate the predicted state forward.
 
 \medskip
-\noindent{\bf Process Mismatch} An implicit assumption regarding the choice of a constant acceleration motion model with white Gaussian acceleration noise is that the jerk of the system is modeled by that white Gaussian noise.  We can apply the Ljung-Box test to test for independence, but we can also use Mardia's test to test for multivariate normality.  Mardia's test statistic is composed of a skewness statistic, $A$, and a kurtosis statistic, $B$.\\
+\noindent{\bf Process Mismatch} An implicit assumption regarding the choice of a constant acceleration motion model with white Gaussian acceleration noise is that the jerk of the system is modeled by that white Gaussian noise.  We can apply the Ljung-Box test to test for independence, but we can also use Mardia's test~\cite{1970} to test for multivariate normality.  Mardia's test statistic is composed of a skewness statistic, $A$, and a kurtosis statistic, $B$.  These two tests are necessary, but not sufficient for normality.\\
 $H_0$: The multivariate quantities are normally distributed.\\
 $H_1$: The multivariate quantities are not normally distributed.\\
 \begin{eqnarray*}

@@ -7,16 +7,17 @@ Our first attempt at designing the measurement covariance matrix involved using 
 
 We applied the Ljung-Box hypothesis test to each track's innovations with many parameters, different subsets of the innovations (position only, velocity only, etc.), different subsets of the tracks, and so on.  It consistently rejected $H_0$ with $\alpha = 0.05$, that is, our innovations were correlated violating the white Gaussian noise assumption.
 
-\subsection{Stationary Receiver}
-Figure~\ref{fig:stationary_map} shows the estimated position of the receiver's antenna at the end of the dataset sequence.  The consistency test was used to tune the process covariance matrix to $2\times10^{-3}I$ and the measurement covariance matrix was not rescaled.
-
 \begin{figure}
 \includegraphics[width=\columnwidth]{stationary_map}
 \caption{Static filter results are indicated with a large circle for clarity.  Kalman-filtered results are shown with their 99\% confidence interval ellipses projected onto the East-North plane.}
 \label{fig:stationary_map} 
 \end{figure}
 
-Using the antenna's surveyed location, we compute the positional error.  Figure~\ref{fig:stationary_error} shows that during some samples, the bias adjustment model reduces error and it does not severely hinder performance at any sample time.  Our consistency test also passes when bias adjustment is enabled.  While we see some modest improvement for this stationary dataset, we do not observe apprecable benefits on any of the mobile datasets.
+
+\subsection{Stationary Receiver}
+Figure~\ref{fig:stationary_map} shows the estimated position of the receiver's antenna at the end of the dataset sequence.  The consistency test was used to tune the process covariance matrix to $2\times10^{-3}I$ and the measurement covariance matrix was not rescaled.
+
+Using the antenna's surveyed location, we compute the positional error.  Figure~\ref{fig:stationary_error} shows that during some samples, the bias adjustment model reduces error and it does not severely hinder performance at any sample time.  Our consistency test also passes when bias adjustment is enabled.  While we see some modest improvement for this stationary dataset, we do not observe appreciable benefits on any of the mobile datasets.
 
 \begin{figure}
 \includegraphics[width=\columnwidth]{error_stationary}
@@ -39,7 +40,7 @@ Figure~\ref{fig:nis_stationary} shows how the normalized innovations squared sta
 \subsection{Airport Dataset}
 Figure~\ref{fig:airportloop_map} shows the estimated trajectory of the vehicle using our time-varying Kalman filter.  This was estimated using a process covariance matrix of $Q = 10I$ and a measurement covariance matrix scaled by $3.5$ in order to pass the consistency test.  This is a very easy dataset, except one set of trees poses a significant challenge for the filter.  The covariance grows quite large until the vehicle passes the trees.  Figure~\ref{fig:airportloop_map_bad} illustrates what happens if we do not scale the measurement covariance matrix to ensure a consistent filter.
 
-\begin{figure}
+\begin{figure}[!bthp]
 \includegraphics[width=\columnwidth]{airportloop_map}
 \caption{Estimated trajectory for \texttt{airportloop} using time-varying Kalman filter adjusted to pass consistency test.  Inset: Highly erroneous navigation solutions lead to an increase in estimation distribution covariance.}
 \label{fig:airportloop_map}
@@ -53,7 +54,7 @@ Figure~\ref{fig:airportloop_map} shows the estimated trajectory of the vehicle u
 
 Figure~\ref{fig:nis} shows how the normalized innovations squared statistic, $t_k$ changes over time.  The green lines indicate the test bounds for a 99\% confidence interval and the blue line indicates the test value.  There is a very narrow range for this test to succeed and the trend of the points indicates that even though we successfully found model parameters that helped pass this test, in real world online scenarios, it would be very difficult to do so as our model does not match the system exactly.
 
-\begin{figure}
+\begin{figure}[!b]
 \includegraphics[width=\columnwidth]{nis}
 \caption{Normalized innovation squared values for the \texttt{airportloop} dataset.  The green lines represent the test bounds and the blue line is the test statistic.}
 \label{fig:nis}
@@ -61,7 +62,7 @@ Figure~\ref{fig:nis} shows how the normalized innovations squared statistic, $t_
 
 Since our time-varying Kalman filter propagates an error covariance matrix through the track, we can also evaluate its performance when there is an outage.  Rather than skip missing observations entirely, we perform the prediction step and propagate the a priori state estimate forward.  If we skipped the missing entries entirely, then the estimate's covariance matrix would not adequately grow to accomidate and mismatch between the process and the model.  It also improves the numerical integration of the vehicle's trajectory.  Figure~\ref{fig:outage} shows one such outage.  GPS measurements are disabled for 5 seconds.  The process covariance matrix was tuned down to $Q = 0.1I$ to improve visualization.
 
-\begin{figure}
+\begin{figure}[!b]
 \includegraphics[width=\columnwidth]{outage}
 \caption{A artificial 5 second outage during the \texttt{airportloop} dataset.  A priori state estimates during outage marked 1-5.}
 \label{fig:outage}
@@ -80,7 +81,7 @@ One aim for us was to use our online hypothesis test to identify the faulty meas
 
 Figure~\ref{fig:max_eigenvalue} shows that for the \texttt{cudtrt13triphammercu} dataset, all eigenvalues are within the unit circle, ensuring a stable filter at each sample time.
 
-\begin{figure}
+\begin{figure}[!b]
 \includegraphics[width=\columnwidth]{eigenvalues}
 \caption{Maximum absolute eigenvalues for time-varying Kalman filter on \texttt{cudtrt13triphammercu} dataset.}
 \label{fig:max_eigenvalue}
