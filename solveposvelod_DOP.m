@@ -182,10 +182,15 @@
 %                      sensible residuals.
 %          
 %
-function [posvelOBS,DOP,el_az,SVsused,sigmaPR,sigmaDopp,Q,Qv] = ...
+function [posvelOBS,DOP,el_az,SVsused,sigmaPR,sigmaDopp,Q,Qv,pRresidualsvec,lambdaL1_Doppresidualsvec] = ...
                    solveposvelod(ephem,pseudoR,Doppshift,guess,...
                                  gpsTime,ionParam,iflagion,elevmask,...
-                                 p,TdegK,hrel,iflagna)
+                                 p,TdegK,hrel,iflagna, pseudorange_bias, doppler_shift_bias)
+if nargin < 14
+    pseudorange_bias = zeros(size(pseudoR));
+    doppler_shift_bias = zeros(size(Doppshift));
+end
+
 % define physical constants
 constant;
 % get the number of satellites to use in the navigation solution
@@ -335,7 +340,7 @@ while (stop == 0)
   % this is reasonable because these perturbations are too small
   % to much affect A or the calculated Newton-Raphson increment x.
   l = pseudoR_corrected - range + arecCO*recCO - c*deltl1ionovec ...
-      - c_deltnavec;
+      - c_deltnavec - pseudorange_bias;
   A = [ax,ay,az,(ones(Nsats,1) + arecCO*(1/c))];  
   % solve for "x", which contains deltaX, deltaY, deltaZ, and 
   % the new c*recCO.  Note that this line is equivalent to
@@ -386,6 +391,8 @@ while (stop == 0)
       satY_Trans(ielevdropvec,:) = [];
       satZ(ielevdropvec,:) = [];
       rowindexvec_SVs_used(ielevdropvec,:) = [];
+      pseudorange_bias(ielevdropvec,:) = [];
+      doppler_shift_bias(ielevdropvec,:) = [];
       % delete elements from vectors that will be used in the
       % velocity solution if this function is going to terminate
       % prematurely due to reaching its maximum iteration count.
@@ -432,7 +439,7 @@ atilz = (1+cc_dot)./(1+(arecCO-ax.*satX_dot-ay.*satY_dot-az.*satZ_dot)/c).*az;
 rhosatdot = -atilx.*satX_dot -atily.*satY_dot -atilz.*satZ_dot;
 % form the vector 'lv' and the matrix 'Av' for the velocity
 % solution.
-lv = -lambdaL1.*Doppshift_used + c*cc_dot - rhosatdot;
+lv = -lambdaL1.*Doppshift_used + c*cc_dot - rhosatdot - doppler_shift_bias;
 Av = [atilx atily atilz (1+lambdaL1*Doppshift_used/c)];
 % solve for "xv", which contains Xdot, Ydot, Zdot, and 
 % c*recCOdot.  Note that this line is equivalent to
@@ -510,5 +517,7 @@ if Nsats > 4
 else
   sigmaPR = NaN;
   sigmaDopp = NaN;
+  lambdaL1_Doppresidualsvec = [];
+  pRresidualsvec = [];
 end
 return;

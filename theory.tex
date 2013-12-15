@@ -1,0 +1,181 @@
+\section{Theory}\label{sec:theory}
+First we describe the particular system we intend to model and then we describe specific statistical hypothesis tests that we applied to validate the model.
+
+\subsection{Model}
+The system model used in this work is similar to the one presented in~\cite{course}.  This system has 11 core states, position, velocity, acceleration, clock offset, and clock rate offset and 8 are realized as measurements, namely, position, velocity, clock offset, and clock rate offset.
+\begin{equation}
+x_k = \left[
+\begin{array}{c}
+\vec{x}_k\\
+\vec{\dot{x}}_k\\
+\vec{\ddot{x}}_k\\
+c\delta_{Rk}\\
+c\dot{\delta}_{Rk}\\
+\end{array}
+\right],
+z_k = \left[
+\begin{array}{c}
+\vec{x}_k\\
+\vec{\dot{x}}_k\\
+c\delta_{Rk}\\
+c\dot{\delta}_{Rk}\\
+\end{array}
+\right]
+\end{equation}
+The state transition matrix used to model the system dynamic is a constant acceleration model described by
+\begin{equation}
+A_k = \left[
+\begin{array}{ccccc}
+I_{3\times3} & \delta_{T_{Rk}}I_{3\times3} & \frac{1}{2}\delta_{T_{Rk}}^2I_{3\times3} & 0 & 0\\
+0 & I_{3\times3} & \delta_{T_{Rk}}I_{3\times3} & 0 & 0\\
+0 & 0 & I_{3\times3} & 0 & 0\\
+0 & 0 & 0 & 1 & \delta_{T_{Rk}}\\
+0 & 0 & 0 & 0 & 1\\
+\end{array}
+\right]
+\end{equation}
+where
+\[\delta_{T_{Rk}} = \frac{t_{Rk+1} - t_{Rk}}{1 + \dot{\delta}_{Rk}}\]
+
+For this work, the process covariance matrix is simply $Q_k = \alpha_kI_{4\times4}$ and the matrix used to map this into the state space is
+\begin{equation}
+G = \left[
+\begin{array}{cc}
+0 & 0\\
+0 & 0\\
+0 & 0\\
+0 & 0\\
+0 & 0\\
+0 & 0\\
+I_{3\times3} & 0\\
+0 & 0\\
+0 & 1\\
+\end{array}
+\right]
+\end{equation}
+
+In order to best accomadate the geometric receiver-satellite configuration, the measurement covariance matrix is designed to consider the position and velocity DOP matrices, $Q_P$ and $Q_V$ for the position and velocity solutions respectively.  An additional assumption is that this measurement uncertainty can be accurately modeled using global $\sigma_{PR}$ and $\sigma_{D}$.  
+Let 
+\begin{equation}
+\sigma_{PR}^2Q_P = 
+\left[
+\begin{array}{cc}
+\Sigma_x & \vec{\sigma}_{x,t}^T\\
+\vec{\sigma}_{x,t} & \sigma_t
+\end{array}
+\right],
+(\lambda_{L1}\sigma_D)^2Q_V = \left[
+\begin{array}{cc}
+\Sigma_{\dot{x}} & \vec{\sigma}_{\dot{x},\dot{t}}^T\\
+\vec{\sigma}_{\dot{x},
+\dot{t}} & \sigma_{\dot{t}}\\
+\end{array}
+\right]
+\end{equation}
+\begin{equation}
+R_k = \left[
+\begin{array}{cccc}
+\Sigma_x & 0 & \vec{\sigma}_{x,t}^T & 0\\
+0 & \Sigma_{\dot{x}} & 0 & \vec{\sigma}_{\dot{x},\dot{t}}^T\\
+\vec{\sigma}_{x,t} & 0 & \sigma_t & 0\\
+0 & \vec{\sigma}_{\dot{x},\dot{t}} & 0& \sigma_{\dot{t}}\\
+\end{array}
+\right]
+\end{equation}
+The matrix used to map measurements into the state space is
+\begin{equation}
+C = \left[
+\begin{array}{cccc}
+I_{3\times3} & 0 & 0 & 0\\
+0 & I_{3\times3} & 0 & 0\\
+0 & 0 & 0 & 0\\
+0 & 0 & 0 & 0\\
+0 & 0 & 0 & 0\\
+0 & 0 & 1 & 0\\
+0 & 0 & 0 & 1\\
+\end{array}
+\right]
+\end{equation}
+
+One thing that is immediately clear from this formulation is that while the Kalman filter considers measurement noise, it does so under the assumption that it is unbiased.  As stated earlier, there are several factors that lead to error in GPS observables, notably multipath and atmospheric mis-modeling.  These errors are often slowly varying, so in a small time window, they can be modeled as measurement bias.  We propose a simple extention to the suggested model by extending the state to include the core state plus per-satellite pseudorange and doppler shift biases.  These biases are introduced into the system as measurements via the residuals from the navigation and velocity solutions.
+\begin{equation}
+x_{bk} = \left[
+\begin{array}{c}
+x_k\\
+\vec{b}_{PRk}\\
+\vec{b}_{Dk}\\
+\end{array}
+\right],
+z_{bk} = \left[
+\begin{array}{c}
+z_k\\
+\vec{b}_{PRk}\\
+\vec{b}_{Dk}\\
+\end{array}
+\right],
+\end{equation}
+Similary, the process and measurement covariance matrices are extended using hand-tuned parameters:
+\begin{equation}
+R_{bk} = \left[
+\begin{array}{ccc}
+R_k & 0 & 0\\
+0 & \beta I_{32\times32} & 0\\
+0 & 0 & \gamma I_{32\times32}\\
+\end{array}
+\right]
+\end{equation}
+\[Q_b = \alpha_k I_{75\times75}\]
+Since only a subset of satellite biases are observable at any given epoch, the matrix $C$ is now time varying and has entries for unobserved satellites set to $0$.
+
+\subsection{Hypothesis Tests}
+Based on the assumptions underlying the Kalman filter one might wish to answer the following questions:
+\begin{enumerate}
+\item Are my filter's innovations white?
+\item Is my estimator consistent?
+\item Might a particular measurement destroy the integrity of my filter?
+\end{enumerate}
+Each of these questions can be answered with well-established hypothesis tests.
+
+\medskip
+\noindent{\bf Innovation Whiteness} In practice, this can be a difficult test to pass since it's clear that errors between measurements from GPS data are slowly varying and correlated.  However, it is something to test for to validate that claim.  There are many possible tests for whiteness of multivariate random variables.  We present the multivariate generalization of the Ljung-Box test.
+
+Our hypothesis test is defined as follows:\\
+$H_0$: Innovations are independently distributed.\\
+$H_1$: Innovations are not independently distributed.\\
+For a maximum lag $h$, innovation dimensionality $K$, and track length $T$,
+\begin{eqnarray*}
+C_i &=& \frac{1}{T}\sum_{t=i+1}^T\tilde{y}_t\tilde{y}_{t-i}^T\\
+Q &=& T(T+2)\sum_{j=1}^h \frac{tr\{C_j^T C_0^{-1} C_j C_0^{-1}\}}{T-j}\\
+\end{eqnarray*}
+where $\tilde{y}_t$ is the innovation at epoch $t$, $C_i$ the multivariate sample autocorrelation at lag $i$, and $Q$ is our test statistic.
+According to a one-tailed test, if $Q > \chi^2_{1-\alpha,K^2h}$ where $\chi^2_{x,v}$ is the CDF of the $\chi^2$ distribution with $v$ degrees of freedom at $x$, then we reject $H_0$.
+
+\medskip
+\noindent Informal Explaination - Consider a simpler statistic, the Box-Pierce test, $Q = T \sum_{j=1}^h tr\{C_j^T C_0^{-1} C_j C_0^{-1}\}$.
+\begin{eqnarray*}
+tr\{C_j^T C_0^{-1} C_j C_0^{-1}\} &=& \sum_{a,b}[(C_j^T C_0^{-1})^T(C_j C_0^{-1})]_{a,b}\\
+ &=& \sum_{a,b}[(C_0^{-T} C_j)(C_j C_0^{-1})]_{a,b}\\
+ &=& \sum_{a,b}[(C_0^{-1} C_j)(C_j C_0^{-1})]_{a,b}\\
+ &=& \sum_{a,b}[C_0^{-1} C_j^2 C_0^{-1}]_{a,b}\\
+\end{eqnarray*}
+This is a sum of squares after the samples have been normalized from their source distributions to the unit covariance distribution.  If each element really is sampled independently from a normal distribution, then the sum of squares should be distributed according to a $\chi^2$ distribution of $h \times K^2$ degrees.
+
+\medskip
+\noindent Practical Considerations - This statistic is useful as-is for steady-state Kalman filters modeling a static receiver.  However, for the case of a time-varying Kalman filter, the distribution $N(0,S_k)$ changes with each sample time.  Therefore, it doesn't make sense to analyse the innovations as if they were sampled from the same distribution.  A workaround is to normalize each innovation to the $N(0, I)$ distribution as though they were sampled from $N(0,S_k)$.  That is, $\tilde{y}_k' = S_k^{-\frac{1}{2}} \tilde{y}_k$.
+
+\medskip
+\noindent{\bf Consistency Test} According to our original assumptions, $\tilde{y}_k \sim N(0, S_k)$.  The following hypothesis test can be used to see if our current model parameters are adequate.\\
+$H_0$: Innovations are normally distributed.\\
+$H_1$: Innovations are not normally distributed.\\
+For innovation dimensionality $K$ and track length $T$
+\begin{eqnarray*}
+t_k &=& \tilde{y}_k^T S^{-1}_k \tilde{y}_k\\
+\bar{\epsilon} &=& \sum_{k=1}^T t_k\\
+\end{eqnarray*}
+$t_k$ is often called the normalized innovations squared.  According to a two-tailed test, if $\alpha/2 > \chi^2_{\bar{\epsilon}, TK}$ or $1-\alpha < \chi^2_{\bar{\epsilon}, TK}$, then reject $H_0$.
+
+\medskip
+\noindent Practical Considurations - Since this is a two-tailed test, it gives us information about whether or not our model parameters produce a consistent filter as well as in what direction we should tune it, if necessary.  The $\tilde{y}_k^T S^{-1}_k \tilde{y}_k$ essentially rescales the innovation from it's source distribution down to $N(0,I)$, assuming $S_k$ was the correct covariance to begin with.  If $\bar{\epsilon}$ is too large, then that means $S^{-1}_k$ was too large and $S_k$ was too small.  Increasing $Q_k$ or $R_k$ will increase $S_k$.  Similarly, if $\bar{\epsilon}$ is too small, then we should decrease $Q_k$ or $R_k$.
+
+\medskip
+\noindent{\bf Failure Rejection} The same consistency test described earlier for filter validation and tuning can be applied online to the entire history of innovations.  If the measurement is deemed to make the consistency test reject $H_0$, then discard the measurement, but still propagate the predicted state forward.

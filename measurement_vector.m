@@ -5,4 +5,8 @@ function z = measurement_vector (measurements)
         measurements.clock_offset; 
         measurements.clock_rate_offset
     ];
+
+    if isfield(measurements, 'pseudorange_bias')
+        z = [z; measurements.pseudorange_bias(:,2); measurements.doppler_shift_bias(:,2)];
+    end
 end

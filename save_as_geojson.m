@@ -6,6 +6,7 @@ function save_as_geojson (filename, x_hat, name, save_covariance)
     fprintf(f, '\t"geometry": {\n');
     fprintf(f, '\t\t"type": "MultiLineString",\n');
     fprintf(f, '\t\t"coordinates": [\n');
+    
     fprintf(f, '\t\t\t[');
 
     for i=1:length(x_hat)
@@ -18,7 +19,7 @@ function save_as_geojson (filename, x_hat, name, save_covariance)
     end
 
     fprintf(f, ']');
-    
+        
     if save_covariance
         num_covariances = min([length(x_hat), 1000]);
         sample_spacing = length(x_hat) / num_covariances;

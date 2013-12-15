@@ -10,6 +10,7 @@
         <nav class="navbar navbar-default" role="navigation">
             <div class="collapse navbar-collapse">
                 <ul class="nav navbar-nav">
+                    <li><a href="/stationary">stationary</a></li>
                     <li><a href="/airportloop">airportloop</a></li>
                     <li><a href="/cudtrt13triphammercu">cudtrt13triphammercu</a></li>
                     <li><a href="/dtrt13triphammer">dtrt13triphammer</a></li>
@@ -25,16 +26,13 @@
                 <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4">
                     <h2>{{ dataset }}</h2>
                     <h3>Pose Estimates</h3>
-                    <div class="checkbox"><label id="absolute"><input checked="true" type="checkbox" > Absolute Position</label></div>
-                    <div class="checkbox"><label id="integrate"><input checked="true" type="checkbox" > Integrated Velocity</label></div>
                     <div class="checkbox"><label id="static_slow"><input checked="true" type="checkbox" > Static - slow gain</label></div>
                     <div class="checkbox"><label id="static_fast"><input checked="true" type="checkbox" > Static - fast gain</label></div>
-                    <div class="checkbox"><label id="kalman_steady_state_0_1"><input checked="true" type="checkbox" > Kalman - steady state, Q=0.1I</label></div>
-                    <div class="checkbox"><label id="kalman_steady_state_1"><input checked="true" type="checkbox" > Kalman - steady state, Q=I</label></div>
-                    <div class="checkbox"><label id="kalman_steady_state_10"><input checked="true" type="checkbox" > Kalman - steady state, Q=10I</label></div>
-                    <div class="checkbox"><label id="kalman_time_varying_0_1"><input checked="true" type="checkbox" > Kalman - time varying, Q=0.1I</label></div>
-                    <div class="checkbox"><label id="kalman_time_varying_1"><input checked="true" type="checkbox" > Kalman - time varying, Q=I</label></div>
-                    <div class="checkbox"><label id="kalman_time_varying_10"><input checked="true" type="checkbox" > Kalman - time varying, Q=10I</label></div>
+                    <div class="checkbox"><label id="kalman_steady_state"><input checked="true" type="checkbox" > Kalman - steady state</label></div>
+                    <div class="checkbox"><label id="kalman_time_varying_0"><input checked="true" type="checkbox" > Kalman - time varying</label></div>
+                    <div class="checkbox"><label id="kalman_time_varying_1"><input checked="true" type="checkbox" > Kalman - time varying, bias adjusting</label></div>
+                    <div class="checkbox"><label id="absolute"><input checked="true" type="checkbox" > Absolute Position</label></div>
+                    <div class="checkbox"><label id="integrate"><input checked="true" type="checkbox" > Integrated Velocity</label></div>
                 </div>
             </div>
         </div>
@@ -60,13 +58,13 @@
 
                 var dataset = '{{ dataset }}';
 
-                var colors = ['#1f77b4', '#8c564b', '#ff7f0e', '#e377c2', '#2ca02c', '#7f7f7f', '#d62728', '#bcbd22', '#9467bd', '#17becf'];
+                var colors = ['#1f77b4', '#8c564b', '#ff7f0e', '#e377c2', '#2ca02c', '#7f7f7f', '#d62728', '#bcbd22', '#9467bd', '#17becf', '#9edae5'];
 
-                var types = ['absolute', 'integrate', 'static_slow', 'static_fast', 'kalman_steady_state_0_1', 'kalman_steady_state_1', 'kalman_steady_state_10', 'kalman_time_varying_0_1', 'kalman_time_varying_1', 'kalman_time_varying_10'];
+                var types = ['test', 'absolute', 'integrate','kalman_steady_state', 'static_slow','kalman_time_varying_1',   'static_fast', 'kalman_time_varying_0',  ];//, 'absolute', 'integrate', 'static_slow', 'static_fast', 'kalman_steady_state_0_1_0', 'kalman_steady_state_1_0', 'kalman_steady_state_10_0', 'kalman_time_varying_0_1_0', 'kalman_time_varying_1_0', 'kalman_time_varying_10_0', 'kalman_time_varying_0_1_1'];
 
-                $.each(colors, function (k, v) {
-                    $.getJSON ('/'+dataset+'/'+types[k], function (data) { 
-                        load_geojson (data, v, types[k]); 
+                $.each(types, function (k, v) {
+                    $.getJSON ('/'+dataset+'/'+v, function (data) { 
+                        load_geojson (data, colors[k], v); 
                     });
                 });
             }

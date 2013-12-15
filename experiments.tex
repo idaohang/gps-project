@@ -1,0 +1,68 @@
+\section{Experiments and Results}\label{sec:experiments}
+Experiments were performed on both stationary and moving datasets.  Our \texttt{stationary} dataset is approximately 22 minutes long and was collected using the Upson Hall antenna on November 11, 2013 starting at approximately 7:39 PM EST.  Weather parameters for the neutral atmosphere corrections were obtained from wunderground.com.  Our moving datasets include those distributed on the course website.  While we evaluated our methods on all datasets, we present in this paper results for \texttt{airportloop} and \texttt{cudtrt13triphammercu}. \texttt{airportloop} offers an interesting case where most of the route is unaffected by multipath errors since tall buildings or overhanging trees are not present.  Additionally, the weather measurements should be quite accurate, assuming they were acquired using the weather station located at the airport.  In contrast, \texttt{cudtrt13triphammercu} offers many challenging examples of line-of-sight occlusion and multipath reflections as well as long stretches of highway for the filter to recover.
+
+We evaluate several versions of our time-varying Kalman filters, each with different turning parameters.  In addition, we also compare to results obtained by using a steady-state Kalman filter built with MATLAB's \texttt{dlqe}, and the two static filters described in~\cite{course}.  Interactive, qualitative results for all datasets can be viewed at \url{http://cs5150.kmatzen.com} until February 2014.
+
+Our first attempt at designing the measurement covariance matrix involved using $\sigma_{PR}$ and $\sigma_D$ from \texttt{solveposvelod}.  In practice, we found two issues with these estimates, both stemming from being estimated by so few satellites at each epoch.  One is that they tend to vary quickly and the other is that they seem to produce filters that were over-confidence in the measurements.  We instead take a moving average of the estimated variances.  Then we tuned the process covariance matrix until the filter passed our consistency test.  For the moving datasets, tuning the process covariance matrix had very little impact on whether or not we could pass the consistency test, presumably due to process mis-modeling.  Instead, we scaled the measurement covariance up by some constant factor for the entire dataset until we could pass the test.
+
+We applied the Ljung-Box hypothesis test to each track's innovations with many parameters, different subsets of the innovations (position only, velocity only, etc.), different subsets of the tracks, and so on.  It consistently rejected $H_0$, that is our innovations were correlated violating the white Gaussian noise assumption.
+
+\subsection{Stationary Receiver}
+Figure~\ref{fig:stationary_map} shows the estimated position of the receiver's antenna at the end of the dataset sequence.  The consistency test was used to tune the process covariance matrix to $2\times10^{-3}I$ and the measurement covariance matrix was not rescaled.
+
+\begin{figure}
+\includegraphics[width=\columnwidth]{stationary_map}
+\caption{Static filter results are indicated with a large circle for clarity.  Kalman-filtered results are shown with their 99\% confidence interval ellipses projected onto the East-North plane.}
+\label{fig:stationary_map} 
+\end{figure}
+
+Using the antenna's surveyed location, we compute the positional error.  Figure~\ref{fig:stationary_error} shows that during some samples, the bias adjustment model reduces error and it does not severely hinder performance at any sample time.  Our consistency test also passes when bias adjustment is enabled.  While we see some modest improvement for this stationary dataset, we do not observe apprecable benefits on any of the mobile datasets.
+
+\begin{figure}
+\includegraphics[width=\columnwidth]{error_stationary}
+\caption{Error of estimated receiver antenna position with respect to sample time.  The bias adjusted model outperforms the base model in some cases.}
+\label{fig:stationary_error}
+\end{figure}
+
+\subsection{Airport Dataset}
+Figure~\ref{fig:airportloop_map} shows the estimated trajectory of the vehicle using our time-varying Kalman filter.  This was estimated using a process covariance matrix of $Q = 10I$ and a measurement covariance matrix scaled by $3.5$ in order to pass the consistency test.  This is a very easy dataset, except one set of trees poses a significant challenge for the filter.  The covariance grows quite large until the vehicle passes the trees.  Figure~\ref{fig:airportloop_map_bad} illustrates what happens if we do not scale the measurement covariance matrix to ensure a consistent filter.
+
+\begin{figure}
+\includegraphics[width=\columnwidth]{airportloop_map}
+\caption{Estimated trajectory for \texttt{airportloop} using time-varying Kalman filter adjusted to pass consistency test.  Inset: Highly erroneous navigation solutions lead to an increase in estimation distribution covariance.}
+\label{fig:airportloop_map}
+\end{figure} 
+
+\begin{figure}
+\includegraphics[width=\columnwidth]{airportloop_map_bad}
+\caption{Without ensuring filter consistency, the filter can grow over-confident and Kalman filter assumptions that lead to optimality can be broken.  Here, the vehicle is estimated to be on the sidewalk with high confidence.}
+\label{fig:airportloop_map_bad}
+\end{figure}
+
+Figure~\ref{fig:nis} shows how the normalized innovations squared statistic, $t_k$ changes over time.  The green lines indicate the test bounds for a 99\% confidence interval and the blue line indicates the test value.  There is a very narrow range for this test to succeed and the trend of the points indicates that even though we successfully found model parameters that helped pass this test, in real world online scenarios, it would be very difficult to do so as our model does not match the system exactly.
+
+\begin{figure}
+\includegraphics[width=\columnwidth]{nis}
+\caption{Normalized innovation squared values for the \texttt{airportloop} dataset.  The green lines represent the test bounds and the blue line is the test statistic.}
+\label{fig:nis}
+\end{figure}
+
+\subsection{cudtrt13triphammercu Dataset}
+This dataset contains examples of significant drift if velocity is simply integrated.  Figure~\ref{fig:track2_map} shows the different between the time-varying Kalman-filtered track and the integrated track.
+
+\begin{figure}
+\includegraphics[width=\columnwidth]{track2_map}
+\caption{Estimated trajectory for \texttt{cudtrt13triphammercu} dataset using time-varying Kalman filter in red.  Integrated velocity shown in green.  Integrated velocity alone suffers from significant drift.  Inset: Erroneous measurements cause distribution covariance to increase significantly.}
+\label{fig:track2_map}
+\end{figure}
+
+One aim for us was to use our online hypothesis test to identify the faulty measurements that cause the sharp increase in covariance highlighted in the inset of Figure~\ref{fig:track2_map}.  Unfortunately, by doing so requires us to discard our entire measurement vector in our model's formulation instead relying on our a priori predicted pose.  If we also had inertial measurements such as acceleration and angular velocity from an IMU, then we might be able to more gracefully recover, but in this current scheme, discarding one measurement led to a cascade of failures.  We were unable to find a set of suitable model parameters for this goal.
+
+Figure~\ref{fig:max_eigenvalue} shows that for the \texttt{cudtrt13triphammercu} dataset, all eigenvalues are within the unit circle, ensuring a stable filter at each sample time.
+
+\begin{figure}
+\includegraphics[width=\columnwidth]{eigenvalues}
+\caption{Maximum absolute eigenvalues for time-varying Kalman filter on \texttt{cudtrt13triphammercu} dataset.}
+\label{fig:max_eigenvalue}
+\end{figure}
+

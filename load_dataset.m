@@ -8,4 +8,6 @@ function dataset = load_dataset(dataset_name)
     dataset.weather = load_weather(dataset_name);
     
     assert (size(dataset.pseudorange,1) == size(dataset.doppler_shift,1));
+
+    dataset.pseudorange(1,2)
 end

@@ -1,0 +1,55 @@
+\documentclass[10pt,twocolumn,letterpaper]{article}
+\usepackage{iccv}
+\usepackage{times}
+\usepackage{epsfig}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{multirow}
+\usepackage{microtype}
+\usepackage{enumitem}
+\setlist{nolistsep}
+\usepackage{url}
+
+% Include other packages here, before hyperref.
+
+% If you comment hyperref and then uncomment it, you should delete
+% egpaper.aux before re-running latex.  (Or just hit 'q' on the first latex
+% run, let it finish, and you should be clear).
+\usepackage[breaklinks=true,bookmarks=false,hidelinks]{hyperref}
+
+\iccvfinalcopy % *** Uncomment this line for the final submission
+
+\def\iccvPaperID{614} % *** Enter the ICCV Paper ID here
+\def\httilde{\mbox{\tt\raisebox{-.5ex}{\symbol{126}}}}
+
+% Pages are numbered in submission mode, and unnumbered in camera-ready
+%\ificcvfinal\pagestyle{empty}\fi
+\setcounter{page}{1} % {4321}
+
+\begin{document}
+
+%%%%%%%%% TITLE
+
+% \title{The best title of all time \kevin{think up best title of all time}}
+
+\title{A Kalman Filter Performance Analysis}
+
+\author{Kevin Matzen}
+
+\maketitle
+%\thispagestyle{empty}
+
+\input{abstract}
+\input{intro}
+\input{theory}
+\input{experiments}
+\input{conclusion}
+
+{\small
+\bibliographystyle{ieee}
+\bibliography{all}
+}
+
+\end{document}
+
