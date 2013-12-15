@@ -1,0 +1,11 @@
+{
+	"type":"Feature",
+	"geometry": {
+		"type": "MultiLineString",
+		"coordinates": [
+			[[-76.482260, 42.444003]]		]
+	},
+	"properties": {
+		"name": "foo"
+	}
+}
