@@ -43,10 +43,8 @@ function x_hat = filter_dataset(dataset_name, elevmask, bias, mode, gain_mode, p
 
     if bias
         num_states = 75;
-        num_measurements = 72;
     else
         num_states = 11;
-        num_measurements = 8;
     end
     
     x_hat{1} = [];
@@ -201,6 +199,7 @@ function x_hat = filter_dataset(dataset_name, elevmask, bias, mode, gain_mode, p
                     pass = (t > r1) && (t < r2);
                     pass = true;
                     if ~pass
+                        disp('fail')
                         A = process_matrix (deltaTRk, bias);
                         x = state_vector (x_hat{k});
                         Ax = A*x;
