@@ -7,6 +7,10 @@ function dataset = load_dataset(dataset_name)
         dataset_name = 'airportloop';
     end
     
+    if strcmp(dataset_name, 'cudtrt13triphammercu_corruption')
+        dataset_name = 'cudtrt13triphammercu';
+    end
+    
     dataset.pseudorange = load(['obs_' dataset_name '.asc']);
     dataset.doppler_shift = load(['obsdopp_' dataset_name '.asc']);
     dataset.ion_params = load(['ion_' dataset_name '.asc']);
@@ -23,6 +27,17 @@ function dataset = load_dataset(dataset_name)
             for j=3:2:size(dataset.pseudorange,2)
                 disp(dataset.pseudorange(i,j))
                 if dataset.pseudorange(i,j) == 11
+                    dataset.pseudorange(i,j+1) = dataset.pseudorange(i,j+1) + 15^2*randn(1);
+                end
+            end
+        end
+    end
+    
+    if strcmp(original_dataset_name, 'cudtrt13triphammercu_corruption')
+        for i=200:205
+            for j=3:2:size(dataset.pseudorange,2)
+                disp(dataset.pseudorange(i,j))
+                if dataset.pseudorange(i,j) == 17
                     dataset.pseudorange(i,j+1) = dataset.pseudorange(i,j+1) + 15^2*randn(1);
                 end
             end
